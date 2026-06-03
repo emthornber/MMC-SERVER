@@ -7,6 +7,7 @@
   "private": true,
   "main": "./main.js",
   "scripts": {
+    "build": "rollup -c rollup.config.mjs",
     "start": "node ./main.js",
     "test": "./node_modules/.bin/mocha ./unit_tests/*.spec.js --timeout 150000 --exit"
   },
@@ -25,8 +26,13 @@
     "winston": "^3.11.0"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^29.0.3",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@rollup/plugin-terser": "^1.0.0",
     "chai": "^4.2.0",
     "mocha": "^11.7.4",
-    "mocha-param": "^2.0.1"
+    "mocha-param": "^2.0.1",
+    "rollup": "^4.61.0"
   }
 }
