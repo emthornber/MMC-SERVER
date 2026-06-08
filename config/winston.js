@@ -1,7 +1,7 @@
-var winston = require('winston');
+const winston = require('winston');
 
 /*
-for rerference only, default npm logging levels used
+for reference only, default npm logging levels used
 lower number being higher priority
 const levels = { 
   error: 0,
@@ -16,9 +16,9 @@ const levels = {
 
 // custom format to put timestamp first
 var timeStampFirst = winston.format.combine(
-  winston.format.timestamp({format: 'HH:mm:ss.SSS'}),
+  winston.format.timestamp({ format: 'HH:mm:ss.SSS' }),
   winston.format.printf((info) => {
-	  return info.timestamp + " " + info.level + "\t" + info.message;
+    return info.timestamp + " " + info.level + "\t" + info.message;
   })
 );
 
@@ -34,47 +34,47 @@ var options = {
   console: {
     level: 'info',
     filename: `./logs/console.log`,
-	  options: { flags: 'w' },
+    options: { flags: 'w' },
     handleExceptions: true,
     maxsize: 1000000,
     maxFiles: 5,
-	  format: messageOnly
+    format: messageOnly
   },
   debug: {
     level: 'debug',
     filename: `./logs/debug.log`,
-	  options: { flags: 'w' },
+    options: { flags: 'w' },
     handleExceptions: true,
     maxsize: 1000000,
     maxFiles: 30,
-	  format: timeStampFirst
+    format: timeStampFirst
   },
   error: {
     level: 'error',
     filename: `./logs/error.log`,
-	  options: { flags: 'w' },
+    options: { flags: 'w' },
     handleExceptions: true,
     maxsize: 1000000,
     maxFiles: 5,
-	  format: timeStampFirst
+    format: timeStampFirst
   },
   info: {
     level: 'info',
     filename: `./logs/info.log`,
-	  options: { flags: 'w' },
+    options: { flags: 'w' },
     handleExceptions: true,
     maxsize: 1000000,
     maxFiles: 10,
-	  format: timeStampFirst
+    format: timeStampFirst
   },
   warn: {
     level: 'warn',
     filename: `./logs/warn.log`,
-	  options: { flags: 'w' },
+    options: { flags: 'w' },
     handleExceptions: true,
     maxsize: 1000000,
     maxFiles: 5,
-	  format: timeStampFirst
+    format: timeStampFirst
   }
 };
 
@@ -95,7 +95,7 @@ winston.add(new winston.transports.File(options.warn));
 
 
 winston.stream = {
-  write: function(message, encoding) {
+  write: function (message, encoding) {
     winston.info(message);
   },
 };

@@ -7,7 +7,7 @@
   "private": true,
   "main": "./main.js",
   "scripts": {
-    "build": "rollup -c rollup.config.mjs",
+    "build": "ncc build main.js -o distribution/pug",
     "start": "node ./main.js",
     "test": "./node_modules/.bin/mocha ./unit_tests/*.spec.js --timeout 150000 --exit"
   },
@@ -20,19 +20,15 @@
     "jsonfile": "^6.1.0",
     "morgan": "^1.10.1",
     "openurl": "^1.1.1",
+    "pug": "^3.0.4",
     "serialport": "^12.0.0",
     "socket.io": "^4.7.2",
     "socket.io-client": "^4.7.3",
     "winston": "^3.11.0"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^29.0.3",
-    "@rollup/plugin-json": "^6.1.0",
-    "@rollup/plugin-node-resolve": "^16.0.3",
-    "@rollup/plugin-terser": "^1.0.0",
     "chai": "^4.2.0",
     "mocha": "^11.7.4",
-    "mocha-param": "^2.0.1",
-    "rollup": "^4.61.0"
+    "mocha-param": "^2.0.1"
   }
 }
