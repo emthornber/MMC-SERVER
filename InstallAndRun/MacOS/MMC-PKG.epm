@@ -1,0 +1,83 @@
+################################################################################
+#   EPM configuration file to create the MMC-SERVER package for MacOS Application
+#
+#   This file is processed by the EPM tool to create a package for installation
+#   on  MacOS. The package is used to install the MMC-SERVER application as a
+#   MacOS Application bundle in the System-Wide Applications directory. 
+#   
+#   30 May, 2026 - E M Thornber
+#   Created
+#
+#   Copyright (c) 2026 Model Electronics Railway Group Ltd
+################################################################################
+#
+# Utilities
+
+# Services
+
+# Directories
+$appdir=/Applications/${appname}.app/Contents
+$bindir=${appdir}/MacOS
+$resdir=${appdir}/Resources
+# Sources
+$distdir=distribution/pug
+$scripts=InstallAndRun/MacOS
+
+%product Module Management Console Server
+%copyright 2026 MERG
+%vendor Model Electronics Railway Group Ltd
+%license License.txt
+%readme README.md
+%description User interface to allow management of CBUS and VLCB modules.
+%version ${version}
+%packager E M Thornber
+
+# Create the application bundle structure and set permissions
+d 700 root wheel $${HOME}/Applications -
+d 755 root wheel $${HOME}/Applications/${appname}.app -
+d 755 root wheel ${appdir} -
+d 755 root wheel ${bindir} -
+d 755 root wheel ${resdir} -
+
+f 755 root wheel ${appdir}/Info.plist ${scripts}/Info.plist nostrip()
+
+# Wrapper script and bundled js file
+f 755 root wheel ${bindir}/node_index ${scripts}/node_index.sh nostrip()
+f 644 root wheel ${resdir}/index.js   ${distdir}/index.js
+
+d 755 root wheel ${resdir}/client-dist -
+f 644 root wheel ${resdir}/client-dist/socket.io.min.js ${distdir}/client-dist/socket.io.min.js
+
+d 755 root wheel ${resdir}/config -
+f 644 root wheel ${resdir}/config ${distdir}/config/*.json
+d 755 root wheel ${resdir}/config/modules -
+f 644 root wheel ${resdir}/config/modules ${distdir}/config/modules/*.json
+
+d 755 root wheel ${resdir}/logs -
+
+d 755 root wheel ${resdir}/public -
+f 644 root wheel ${resdir}/public/favicon.ico ${distdir}/public/favicon.ico
+f 644 root wheel ${resdir}/public/index.html  ${distdir}/public/index.html
+
+d 755 root wheel ${resdir}/public/css -
+f 644 root wheel ${resdir}/public/css ${distdir}/public/css/*.css
+
+d 755 root wheel ${resdir}/public/dummyModule -
+f 644 root wheel ${resdir}/public/dummyModule ${distdir}/public/dummyModule/*.html
+
+d 755 root wheel ${resdir}/public/fonts -
+f 644 root wheel ${resdir}/public/fonts ${distdir}/public/fonts/*.woff
+f 644 root wheel ${resdir}/public/fonts ${distdir}/public/fonts/*.woff2
+
+d 755 root wheel ${resdir}/public/icons -
+f 644 root wheel ${resdir}/public/icons ${distdir}/public/icons/*.png
+
+d 755 root wheel ${resdir}/public/img -
+f 644 root wheel ${resdir}/public/img ${distdir}/public/img/*.png
+
+# Front-end resources
+d 755 root wheel ${resdir}/public/js -
+f 644 root wheel ${resdir}/public/js ${distdir}/public/js/*.js
+
+d 755 root wheel ${resdir}/views -
+f 644 root wheel ${resdir}/views ${distdir}/views/*.jade

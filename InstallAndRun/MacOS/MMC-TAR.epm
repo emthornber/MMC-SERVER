@@ -1,0 +1,74 @@
+################################################################################
+#   EPM configuration file to create the MMC-SERVER tarball for MacOS Application
+#
+#   This file is processed by the EPM tool to create a package for installation
+#   on  MacOS. The package is used to install the MMC-SERVER application as a
+#   MacOS Application bundle in a User directory. 
+#   
+#   10 June, 2026 - E M Thornber
+#   Created
+#
+#   Copyright (c) 2026 Model Electronics Railway Group Ltd
+################################################################################
+#
+# Utilities
+
+# Services
+
+# Directories
+$appdir=${appname}
+# Sources
+$distdir=distribution/pug
+$scripts=InstallAndRun/MacOS
+
+%product Module Management Console Server
+%copyright 2026 MERG
+%vendor Model Electronics Railway Group Ltd
+%license License.txt
+%readme README.md
+%description User interface to allow management of CBUS and VLCB modules.
+%version ${version}
+%packager E M Thornber
+
+# Create the application bundle structure and set permissions
+d 755 thornbem staff ${appdir} -
+
+# Bundled js file
+f 644 thornbem staff ${appdir}/index.js   ${distdir}/index.js
+
+d 755 thornbem staff ${appdir}/client-dist -
+f 644 thornbem staff ${appdir}/client-dist/socket.io.min.js ${distdir}/client-dist/socket.io.min.js
+
+d 755 thornbem staff ${appdir}/config -
+f 644 thornbem staff ${appdir}/config ${distdir}/config/*.json
+d 755 thornbem staff ${appdir}/config/modules -
+f 644 thornbem staff ${appdir}/config/modules ${distdir}/config/modules/*.json
+
+d 755 thornbem staff ${appdir}/logs -
+
+d 755 thornbem staff ${appdir}/public -
+f 644 thornbem staff ${appdir}/public/favicon.ico ${distdir}/public/favicon.ico
+f 644 thornbem staff ${appdir}/public/index.html  ${distdir}/public/index.html
+
+d 755 thornbem staff ${appdir}/public/css -
+f 644 thornbem staff ${appdir}/public/css ${distdir}/public/css/*.css
+
+d 755 thornbem staff ${appdir}/public/dummyModule -
+f 644 thornbem staff ${appdir}/public/dummyModule ${distdir}/public/dummyModule/*.html
+
+d 755 thornbem staff ${appdir}/public/fonts -
+f 644 thornbem staff ${appdir}/public/fonts ${distdir}/public/fonts/*.woff
+f 644 thornbem staff ${appdir}/public/fonts ${distdir}/public/fonts/*.woff2
+
+d 755 thornbem staff ${appdir}/public/icons -
+f 644 thornbem staff ${appdir}/public/icons ${distdir}/public/icons/*.png
+
+d 755 thornbem staff ${appdir}/public/img -
+f 644 thornbem staff ${appdir}/public/img ${distdir}/public/img/*.png
+
+# Front-end resources
+d 755 thornbem staff ${appdir}/public/js -
+f 644 thornbem staff ${appdir}/public/js ${distdir}/public/js/*.js
+
+d 755 thornbem staff ${appdir}/views -
+f 644 thornbem staff ${appdir}/views ${distdir}/views/*.jade

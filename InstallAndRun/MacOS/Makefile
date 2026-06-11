@@ -7,20 +7,23 @@
 
 #APPNAME=${shell npm pkg get name | tr -d '"'}
 APPNAME=MMC-SERVER
-USRN=${shell whoami}
-USRG=${shell id -gn}
 VERSION=${shell npm pkg get version | tr -d '"'}
-ARCH := arm
 EPM := $(shell which epm)
 ODIR := InstallAndRun/MacOS
-APPDEFN := InstallAndRun/MacOS/$(APPNAME).epm
+APPPKG := InstallAndRun/MacOS/MMC-PKG.epm
+APPTAR := InstallAndRun/MacOS/MMC-TAR.epm
 RM=/bin/rm -f
 TS=`date "+%y%m%d-%H%M"`
 
+EPMARGS := -vv --output-dir $(ODIR) appname=${APPNAME} version=${VERSION} $(APPNAME)
 all: pkgs
 
 pkgs: portable macos
 
-macos portable :
+macos :
 	$(RM) $(ODIR)/$@-*.log
-	$(EPM) -a $(ARCH) -f $@ -vv --output-dir $(ODIR) appname=${APPNAME} usrn=${USRN} usrg=${USRG} version=${VERSION} $(APPNAME) $(APPDEFN) 2>&1 | tee $(ODIR)/$@-$(TS).log
+	$(EPM) --setup-image ${ODIR}/MMCicon-256.gif -a arm -f $@ ${EPMARGS} $(APPPKG) 2>&1 | tee $(ODIR)/$@-$(TS).log
+
+portable :
+	$(RM) $(ODIR)/$@-*.log
+	$(EPM) -a all -f $@ ${EPMARGS} $(APPTAR) 2>&1 | tee $(ODIR)/$@-$(TS).log
