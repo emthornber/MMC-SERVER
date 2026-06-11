@@ -41,9 +41,10 @@ d 755 root wheel ${resdir} -
 
 f 755 root wheel ${appdir}/Info.plist ${scripts}/Info.plist nostrip()
 
-# Wrapper script and bundled js file
-f 755 root wheel ${bindir}/node_index ${scripts}/node_index.sh nostrip()
-f 644 root wheel ${resdir}/index.js   ${distdir}/index.js
+# Wrapper script, icon and bundled js files
+f 755 root wheel ${bindir}/node_index      ${scripts}/node_index.sh nostrip()
+f 644 root wheel ${resdir}/index.js        ${distdir}/index.js
+f 644 root wheel ${resdir}/MMCicon-256.png ${scripts}/MMCicon-256.png
 
 d 755 root wheel ${resdir}/client-dist -
 f 644 root wheel ${resdir}/client-dist/socket.io.min.js ${distdir}/client-dist/socket.io.min.js

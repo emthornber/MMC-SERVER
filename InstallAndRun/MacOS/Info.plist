@@ -13,7 +13,7 @@
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleIconFile</key>
-  <string>MMCicon-256.icns</string>
+  <string>MMCicon-256.png</string>
   <key>CFBundleExecutable</key>
   <string>node_index</string>
   <key>CFBundleSignature</key>
