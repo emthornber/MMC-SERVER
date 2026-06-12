@@ -1,3 +1,3 @@
 #! /bin/sh
-cd "$(dirname "$0")/../Resources"
+cd "/usr/local/share/MMC-SERVER"
 exec /usr/local/bin/node index.js

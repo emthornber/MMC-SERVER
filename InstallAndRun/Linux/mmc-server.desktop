@@ -1,0 +1,13 @@
+[Desktop Entry] 
+Encoding=UTF-8
+Version=1.5
+Name=MMC
+Comment=Start the CBUS/VLCB Module Management Configuration tool
+GenericName=Module Management Configuration
+Type=Application
+Terminal=false
+Categories=System;
+Path=/usr/local/share/MMC-SERVER
+TryExec=/usr/local/bin/mmc-server
+Exec=/usr/local/bin/mmc-server
+Icon=/usr/local/share/MMC-SERVER/MMCicon-256.png

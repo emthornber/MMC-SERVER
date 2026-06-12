@@ -40,6 +40,11 @@ d 755 root root ${bindir} -
 d 755 root root /usr/local/share -
 d 755 root root ${resdir} -
 
+# Desktop file
+d 755 root root /usr/share -
+d 755 root root /usr/share/applications -
+f 644 root root /usr/share/applications/${appname}.desktop ${scripts}/mmc-server.desktop
+
 # Wrapper script, icon and bundled js files
 f 755 root root ${bindir}/mmc-server      ${scripts}/mmc-server.sh nostrip()
 f 644 root root ${resdir}/index.js        ${distdir}/index.js

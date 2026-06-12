@@ -16,6 +16,7 @@ RM=/bin/rm -f
 TS=`date "+%y%m%d-%H%M"`
 
 EPMARGS := -vv --output-dir $(ODIR) appname=${APPNAME} version=${VERSION} $(APPNAME)
+
 all: pkgs
 
 pkgs: portable macos

@@ -8,6 +8,8 @@
   "main": "./main.js",
   "scripts": {
     "build": "ncc build main.js -o distribution/pug",
+    "debpkg": "make -f InstallAndRun/Linux/Makefile deb",
+    "debtar": "make -f InstallAndRun/Linux/Makefile portable",
     "dev": "ncc run main.js",
     "macpkg": "make -f InstallAndRun/MacOS/Makefile macos",
     "mactar": "make -f InstallAndRun/MacOS/Makefile portable",
