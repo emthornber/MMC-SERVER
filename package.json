@@ -9,9 +9,9 @@
   "scripts": {
     "build": "ncc build main.js -o distribution/pug",
     "dev": "ncc run main.js",
-    "pkg": "make -f InstallAndRun/MacOS/Makefile macos",
+    "macpkg": "make -f InstallAndRun/MacOS/Makefile macos",
+    "mactar": "make -f InstallAndRun/MacOS/Makefile portable",
     "start": "node ./main.js",
-    "tar": "make -f InstallAndRun/MacOS/Makefile portable",
     "test": "./node_modules/.bin/mocha ./unit_tests/*.spec.js --timeout 150000 --exit"
   },
   "dependencies": {

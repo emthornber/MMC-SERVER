@@ -22,7 +22,7 @@ pkgs: portable macos
 
 macos :
 	$(RM) $(ODIR)/$@-*.log
-	$(EPM) --setup-image ${ODIR}/MMCicon-256.gif -a arm -f $@ ${EPMARGS} $(APPPKG) 2>&1 | tee $(ODIR)/$@-$(TS).log
+	$(EPM) --setup-image ${ODIR}/MMCicon-256.gif -a all -f $@ ${EPMARGS} $(APPPKG) 2>&1 | tee $(ODIR)/$@-$(TS).log
 
 portable :
 	$(RM) $(ODIR)/$@-*.log
