@@ -54,8 +54,6 @@ f 644 root wheel ${resdir}/config ${distdir}/config/*.json
 d 755 root wheel ${resdir}/config/modules -
 f 644 root wheel ${resdir}/config/modules ${distdir}/config/modules/*.json
 
-d 755 root wheel ${resdir}/logs -
-
 d 755 root wheel ${resdir}/public -
 f 644 root wheel ${resdir}/public/favicon.ico ${distdir}/public/favicon.ico
 f 644 root wheel ${resdir}/public/index.html  ${distdir}/public/index.html

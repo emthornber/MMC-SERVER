@@ -44,8 +44,6 @@ f 644 thornbem staff ${appdir}/config ${distdir}/config/*.json
 d 755 thornbem staff ${appdir}/config/modules -
 f 644 thornbem staff ${appdir}/config/modules ${distdir}/config/modules/*.json
 
-d 755 thornbem staff ${appdir}/logs -
-
 d 755 thornbem staff ${appdir}/public -
 f 644 thornbem staff ${appdir}/public/favicon.ico ${distdir}/public/favicon.ico
 f 644 thornbem staff ${appdir}/public/index.html  ${distdir}/public/index.html
