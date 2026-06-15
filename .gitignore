@@ -9,4 +9,8 @@ unit_tests/test_output
 ./unit_tests/test_output/
 VLCB-server/config/nodeDescriptors.json
 package-lock.json
-
+distribution/
+*.dmg
+*.gz
+*.log
+*.pkg
