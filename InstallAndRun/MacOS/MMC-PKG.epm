@@ -8,6 +8,9 @@
 #   30 May, 2026 - E M Thornber
 #   Created
 #
+#   17 June, E M Thornber
+#   Added support for the new SPA front-end resources.
+#
 #   Copyright (c) 2026 Model Electronics Railway Group Ltd
 ################################################################################
 #
@@ -22,6 +25,7 @@ $resdir=${appdir}/Resources
 # Sources
 $distdir=distribution/pug
 $scripts=InstallAndRun/MacOS
+$fedir=${scripts}/spa
 
 %product Module Management Console Server
 %copyright 2026 MERG
@@ -55,28 +59,28 @@ d 755 root wheel ${resdir}/config/modules -
 f 644 root wheel ${resdir}/config/modules ${distdir}/config/modules/*.json
 
 d 755 root wheel ${resdir}/public -
-f 644 root wheel ${resdir}/public/favicon.ico ${distdir}/public/favicon.ico
-f 644 root wheel ${resdir}/public/index.html  ${distdir}/public/index.html
+f 644 root wheel ${resdir}/public/favicon.ico ${fedir}/favicon.ico
+f 644 root wheel ${resdir}/public/index.html  ${fedir}/index.html
 
 d 755 root wheel ${resdir}/public/css -
-f 644 root wheel ${resdir}/public/css ${distdir}/public/css/*.css
+f 644 root wheel ${resdir}/public/css ${fedir}/css/*.css
 
 d 755 root wheel ${resdir}/public/dummyModule -
-f 644 root wheel ${resdir}/public/dummyModule ${distdir}/public/dummyModule/*.html
+f 644 root wheel ${resdir}/public/dummyModule ${fedir}/dummyModule/*.html
 
 d 755 root wheel ${resdir}/public/fonts -
-f 644 root wheel ${resdir}/public/fonts ${distdir}/public/fonts/*.woff
-f 644 root wheel ${resdir}/public/fonts ${distdir}/public/fonts/*.woff2
+f 644 root wheel ${resdir}/public/fonts ${fedir}/fonts/*.woff
+f 644 root wheel ${resdir}/public/fonts ${fedir}/fonts/*.woff2
 
 d 755 root wheel ${resdir}/public/icons -
-f 644 root wheel ${resdir}/public/icons ${distdir}/public/icons/*.png
+f 644 root wheel ${resdir}/public/icons ${fedir}/icons/*.png
 
 d 755 root wheel ${resdir}/public/img -
-f 644 root wheel ${resdir}/public/img ${distdir}/public/img/*.png
+f 644 root wheel ${resdir}/public/img ${fedir}/img/*.png
 
 # Front-end resources
 d 755 root wheel ${resdir}/public/js -
-f 644 root wheel ${resdir}/public/js ${distdir}/public/js/*.js
+f 644 root wheel ${resdir}/public/js ${fedir}/js/*.js
 
 d 755 root wheel ${resdir}/views -
 f 644 root wheel ${resdir}/views ${distdir}/views/*.jade

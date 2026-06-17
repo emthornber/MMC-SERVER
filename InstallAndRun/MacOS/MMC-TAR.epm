@@ -45,28 +45,28 @@ d 755 thornbem staff ${appdir}/config/modules -
 f 644 thornbem staff ${appdir}/config/modules ${distdir}/config/modules/*.json
 
 d 755 thornbem staff ${appdir}/public -
-f 644 thornbem staff ${appdir}/public/favicon.ico ${distdir}/public/favicon.ico
-f 644 thornbem staff ${appdir}/public/index.html  ${distdir}/public/index.html
+f 644 thornbem staff ${appdir}/public/favicon.ico ${fedir}/favicon.ico
+f 644 thornbem staff ${appdir}/public/index.html  ${fedir}/index.html
 
 d 755 thornbem staff ${appdir}/public/css -
-f 644 thornbem staff ${appdir}/public/css ${distdir}/public/css/*.css
+f 644 thornbem staff ${appdir}/public/css ${fedir}/css/*.css
 
 d 755 thornbem staff ${appdir}/public/dummyModule -
-f 644 thornbem staff ${appdir}/public/dummyModule ${distdir}/public/dummyModule/*.html
+f 644 thornbem staff ${appdir}/public/dummyModule ${fedir}/dummyModule/*.html
 
 d 755 thornbem staff ${appdir}/public/fonts -
-f 644 thornbem staff ${appdir}/public/fonts ${distdir}/public/fonts/*.woff
-f 644 thornbem staff ${appdir}/public/fonts ${distdir}/public/fonts/*.woff2
+f 644 thornbem staff ${appdir}/public/fonts ${fedir}/fonts/*.woff
+f 644 thornbem staff ${appdir}/public/fonts ${fedir}/fonts/*.woff2
 
 d 755 thornbem staff ${appdir}/public/icons -
-f 644 thornbem staff ${appdir}/public/icons ${distdir}/public/icons/*.png
+f 644 thornbem staff ${appdir}/public/icons ${fedir}/icons/*.png
 
 d 755 thornbem staff ${appdir}/public/img -
-f 644 thornbem staff ${appdir}/public/img ${distdir}/public/img/*.png
+f 644 thornbem staff ${appdir}/public/img ${fedir}/img/*.png
 
 # Front-end resources
 d 755 thornbem staff ${appdir}/public/js -
-f 644 thornbem staff ${appdir}/public/js ${distdir}/public/js/*.js
+f 644 thornbem staff ${appdir}/public/js ${fedir}/js/*.js
 
 d 755 thornbem staff ${appdir}/views -
 f 644 thornbem staff ${appdir}/views ${distdir}/views/*.jade
