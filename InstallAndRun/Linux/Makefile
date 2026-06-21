@@ -19,6 +19,8 @@ all: pkgs
 
 pkgs: portable deb
 
+.PHONY: all pkgs deb portable
+
 deb portable :
 	$(RM) $(ODIR)/$@-*.log
 	$(EPM) -a all -f $@ ${EPMARGS} $(APPFILES) 2>&1 | tee $(ODIR)/$@-$(TS).log

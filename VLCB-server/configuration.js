@@ -8,7 +8,7 @@ const EventEmitter = require('events').EventEmitter;
 const name = 'configuration'
 const os = require("os");
 const packageInfo = require(process.cwd() + '/package.json')
-const utils = require('./../VLCB-server/utilities.js');
+const utils = require('./utilities.js');
 
 
 // Scope:

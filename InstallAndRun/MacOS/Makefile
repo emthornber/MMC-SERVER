@@ -16,6 +16,7 @@ VERSION=${shell npm pkg get version | tr -d '"'}
 EPM := $(shell which epm)
 OSNAME=${shell uname -s}
 ARCH=${shell uname -m}
+DDIR := distribution/pug
 ODIR := InstallAndRun/MacOS
 APPPKG := InstallAndRun/MacOS/MMC-PKG.epm
 APPTAR := InstallAndRun/MacOS/MMC-TAR.epm
@@ -31,15 +32,25 @@ all: pkgs
 
 pkgs: portable macos
 
+.PHONY: all pkgs macos portable spa public
+
 macos : spa
 	$(RM) $(ODIR)/$@-*.log
-	$(EPM) --setup-image ${ODIR}/MMCicon-256.gif -a all -f $@ ${EPMARGS} $(APPPKG) 2>&1 | tee $(ODIR)/$@-$(TS).log
+	$(EPM) -a arm -f $@ ${EPMARGS} $(APPPKG) 2>&1 | tee $(ODIR)/$@-$(TS).log
 
 portable : spa
 	$(RM) $(ODIR)/$@-*.log
 	$(EPM) -a all -f $@ ${EPMARGS} $(APPTAR) 2>&1 | tee $(ODIR)/$@-$(TS).log
 
 spa:
-	${RM} -Rf ${ODIR}/spa/
+	${RM} -Rf ${ODIR}/$@/
 	${CP} ../MMC-CLIENT/dist/${TARBALL}_*.tar.gz ${ODIR}/
-	(cd ${ODIR} && tar -xzf ${TARBALL}_*.tar.gz && rm -f ${TARBALL}_*.tar.gz)
+	(cd ${ODIR} && tar -xzf ${TARBALL}_*.tar.gz)
+	rm -f ${ODIR}/${TARBALL}_*.tar.gz
+
+public:
+	${RM} -Rf ${DDIR}/$@/
+	${CP} ../MMC-CLIENT/dist/${TARBALL}_*.tar.gz ${DDIR}/
+	(cd ${DDIR} && tar -xzf ${TARBALL}_*.tar.gz)
+	mv ${DDIR}/spa ${DDIR}/$@
+	rm -f ${DDIR}/${TARBALL}_*.tar.gz

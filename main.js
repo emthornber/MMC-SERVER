@@ -1,15 +1,15 @@
 const fs = require('fs');
 // lets ensure the logs folder is empty
 if (fs.existsSync("logs")) {
-  fs.rmSync("logs", { recursive: true }) 
+  fs.rmSync("logs", { recursive: true })
 }
 
 let path = require('path')
 const winston = require(path.join(process.cwd(), 'config/winston.js'));
 const name = "main"
-winston.info({message: name + ': Starting'});
-winston.info({message: name + ': current working directory ' + process.cwd()});
-winston.info({message: name + ': file location ' + __dirname});
+winston.info({ message: name + ': Starting' });
+winston.info({ message: name + ': current working directory ' + process.cwd() });
+winston.info({ message: name + ': file location ' + __dirname });
 const fork = require('child_process').fork;
 
 
@@ -36,7 +36,7 @@ vlcbServer.on('close', () => {
 
 
 
-const VLCB = require('./VLCB-server/server.js');
+const VLCB = require(path.join(process.cwd(), 'VLCB-server/server.js'));
 VLCB.run();
 
 
@@ -54,7 +54,7 @@ var http = require('http');
  */
 
 var port = normalizePort(process.env.MMC_SERVER_HTTP_PORT || '3000');
-console.log (`using port ` + port)
+console.log(`using port ` + port)
 app.set('port', port);
 
 /**
@@ -133,16 +133,16 @@ function onListening() {
 
 try {
   // open a window with the port used by express
-  var win = nw.Window.open("http://localhost:" + port, {}, function(win) {
-    win.on('loaded', function() {
+  var win = nw.Window.open("http://localhost:" + port, {}, function (win) {
+    win.on('loaded', function () {
       win.maximize()
     });
   });
-} catch (e){
+} catch (e) {
   // if it fails, probably not using nw, so use openurl
   require("openurl").open("http://localhost:" + port, (e) => {
     if (e != undefined) {
-      winston.error({message: `${name}: Error when using openurl: ${e}`})
+      winston.error({ message: `${name}: Error when using openurl: ${e}` })
     }
   });
 }

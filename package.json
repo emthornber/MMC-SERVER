@@ -7,11 +7,12 @@
   "private": true,
   "main": "./main.js",
   "scripts": {
-    "build": "ncc build main.js -o distribution/pug",
+    "build": "ncc build ./main.js -o distribution/pug",
     "debpkg": "make -f InstallAndRun/Linux/Makefile deb",
     "debtar": "make -f InstallAndRun/Linux/Makefile portable",
-    "dev": "ncc run main.js",
+    "dev": "ncc run ./main.js -d -m",
     "macpkg": "make -f InstallAndRun/MacOS/Makefile macos",
+    "macpug": "make -f InstallAndRun/MacOS/Makefile public",
     "mactar": "make -f InstallAndRun/MacOS/Makefile portable",
     "start": "node ./main.js",
     "test": "./node_modules/.bin/mocha ./unit_tests/*.spec.js --timeout 150000 --exit"
