@@ -21,7 +21,7 @@
 $bindir=/usr/local/bin
 $resdir=/usr/local/share/${appname}
 # Sources
-$distdir=distribution/pug
+$distdir=dist/pug
 $scripts=InstallAndRun/Linux
 $fedir=${scripts}/spa
 

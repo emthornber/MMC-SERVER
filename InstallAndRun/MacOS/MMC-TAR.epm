@@ -18,7 +18,7 @@
 # Directories
 $appdir=${appname}
 # Sources
-$distdir=distribution/pug
+$distdir=dist/pug
 $scripts=InstallAndRun/MacOS
 
 %product Module Management Console Server

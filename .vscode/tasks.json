@@ -1,0 +1,14 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "process",
+            "label": "ncc: build",
+            "command": "node ${workspaceFolder}/node_modules/.bin/ncc build ./main.js -d dist/pug -s",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}

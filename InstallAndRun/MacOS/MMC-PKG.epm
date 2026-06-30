@@ -23,7 +23,7 @@ $appdir=/Applications/${appname}.app/Contents
 $bindir=${appdir}/MacOS
 $resdir=${appdir}/Resources
 # Sources
-$distdir=distribution/pug
+$distdir=dist/pug
 $scripts=InstallAndRun/MacOS
 $fedir=${scripts}/spa
 
