@@ -1,0 +1,67 @@
+################################################################################
+#   EPM configuration file to create the MMC-SERVER package for MacOS Application
+#
+#   This file is processed by the EPM tool to create a package for installation
+#   on MacOS. The package is used to install the MMC-SERVER functionality as a
+#   MacOS Application bundle in the System-Wide Applications directory. 
+#   
+#   30 May, 2026 - E M Thornber
+#   Created
+#
+#   17 June, 2026 - E M Thornber
+#   Added support for the new SPA front-end resources.
+#
+#   1 July, 2026 - E M Thornber
+#   Updated to use the new MMC-SERVER distribution tarball.
+#
+#   Copyright (c) 2026 Model Electronics Railway Group Ltd
+################################################################################
+#
+# Utilities
+
+# Services
+
+# Directories
+$appdir=/Applications/${appname}.app/Contents
+$bindir=${appdir}/MacOS
+$resdir=${appdir}/Resources
+# Sources and tarballs
+$scripts=InstallAndRun/MacOS
+
+%product Module Management Console Server
+%copyright 2026 MERG
+%vendor Model Electronics Railway Group Ltd
+%license License.txt
+%readme README.md
+%description User interface to allow management of CBUS and VLCB modules.
+%version ${version}
+%packager E M Thornber
+
+# Create the application bundle structure and set permissions
+d 700 root wheel /Applications -
+d 755 root wheel /Applications/${appname}.app -
+d 755 root wheel ${appdir} -
+d 755 root wheel ${bindir} -
+d 755 root wheel ${resdir} -
+
+f 755 root wheel ${appdir}/Info.plist ${scripts}/Info.plist nostrip()
+
+# Wrapper script and icon files
+f 755 root wheel ${bindir}/node_index      ${scripts}/node_index.sh nostrip()
+f 644 root wheel ${resdir}/MMCicon-256.png ${scripts}/MMCicon-256.png
+
+# Copy the MMC-SERVER source tarball and the MMC-CLIENT distribution tarball into the application bundle
+f 644 root wheel ${resdir}/MMC-SERVER-source.tar.gz ${scripts}/MMC-SERVER-source-${version}.tar.gz
+f 644 root wheel ${resdir}/MMC-CLIENT-bundle.tar.gz ${scripts}/MMC-CLIENT-bundle-${version}.tar.gz
+
+# Create directory to hold unpacked MMC-CLIENT spa resources
+d 755 root wheel ${resdir}/public -
+
+%postinstall << EOF
+#!/bin/sh
+# Post-installation script to unpack the MMC-SERVER and MMC-CLIENT tarballs
+cd ${resdir}
+tar -xzf MMC-SERVER-source.tar.gz -C .
+tar -xzf MMC-CLIENT-bundle.tar.gz --strip-components=1 -C public
+npm ci
+EOF
