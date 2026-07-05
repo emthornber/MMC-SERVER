@@ -1,0 +1,10 @@
+|appdir|/bin/
+|appdir|/dist/
+|appdir|/Documents/
+|appdir|/InstallAndRun/
+|appdir|/logs/
+|appdir|/node_modules/
+|appdir|/undefined/
+|appdir|/unit_tests/
+|appdir|/package-lock.json
+*.tar.gz

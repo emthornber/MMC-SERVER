@@ -1,0 +1,61 @@
+################################################################################
+#   EPM configuration file to create the MMC-SERVER package for Linux
+#
+#   This file is processed by the EPM tool to create a package of files for
+#   installation on Debian Linux.
+#   
+#   5 July, 2026 - E M Thornber
+#   Created
+#
+#   Copyright (c) 2026 Model Electronics Railway Group Ltd
+################################################################################
+#
+# Utilities
+
+# Services
+
+# Directories
+$bindir=/usr/local/bin
+$resdir=/usr/local/share/${appname}
+# Sources
+$scripts=InstallAndRun/Linux
+
+%product Module Management Console Server
+%copyright 2026 MERG
+%vendor Model Electronics Railway Group Ltd
+%license License.txt
+%readme README.md
+%description User interface to allow management of CBUS and VLCB modules.
+%version ${version}
+%packager E M Thornber
+
+%requires nodejs
+%requires npm
+
+# Create the application bundle structure and set permissions
+d 755 root root /usr -
+d 755 root root /usr/local -
+d 755 root root ${bindir} -
+d 755 root root /usr/local/share -
+d 755 root root ${resdir} -
+
+# Desktop file
+d 755 root root /usr/share -
+d 755 root root /usr/share/applications -
+f 644 root root /usr/share/applications/${appname}.desktop ${scripts}/mmc-server.desktop
+
+# Wrapper script, icon and bundled js files
+f 755 root root ${bindir}/mmc-server      ${scripts}/mmc-server.bash nostrip()
+f 644 root root ${resdir}/MMCicon-256.png ${scripts}/../MMCicon-256.png
+
+# Copy the MMC-SERVER source tarball into the application bundle
+f 644 root root ${resdir}/MMC-SERVER-source.tar.gz ${scripts}/MMC-SERVER-source-${version}.tar.gz
+
+%postinstall << EOF
+#!/bin/bash
+# export PATH=$$PATH:/usr/bin
+# Post-installation script to unpack the MMC-SERVER tarballs
+cd ${resdir}
+/usr/bin/tar -xzf MMC-SERVER-source.tar.gz --strip-components=1
+/usr/bin/npm install --omit=dev
+EOF

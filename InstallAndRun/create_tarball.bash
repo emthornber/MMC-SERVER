@@ -8,11 +8,11 @@
 ################################################################################
 
 APP_NAME="MMC-SERVER"
-EXCLUDE_FILE="MMC-SERVER/InstallAndRun/MacOS/excluded_files.txt"
+EXCLUDE_FILE="MMC-SERVER/InstallAndRun/excluded_files.txt"
 TAR=/usr/bin/tar
 VERSION=`npm pkg get version | tr -d '"'`
 GZIP=/usr/bin/gzip
 
 ( cd .. ; \
   ${TAR} -cvf - --exclude-vcs --exclude-from ${EXCLUDE_FILE} MMC-SERVER/* ) | \
-  ${GZIP} -9 > InstallAndRun/MacOS/${APP_NAME}-src-${VERSION}.tar.gz
+  ${GZIP} -9 > InstallAndRun/APP_NAME}-src-${VERSION}.tar.gz

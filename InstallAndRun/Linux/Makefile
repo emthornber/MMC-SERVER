@@ -1,5 +1,5 @@
 ################################################################################
-#   Makefile for building the MMC-SERVER application packages for MacOS
+#   Makefile for building the MMC-SERVER application packages for Debian Linux
 #
 #   30 June, 2026 - E M Thornber
 #   Created
@@ -20,11 +20,10 @@ TS=`date "+%y%m%d-%H%M"`
 
 EPMARGS := -nsm -vv --output-dir ./ appname=${APPNAME} version=${VERSION} $(APPNAME)
 
-all: macos
+all: deb
 
-.PHONY: all macos
+.PHONY: all deb
 
-macos:
+deb:
 	$(RM) $@-*.log
-	sed -e "s/|version|/${VERSION}/g" Info.plist.in > Info.plist
 	$(EPM) -a all -f $@ ${EPMARGS} $(APPPKG) 2>&1 | tee $@-$(TS).log

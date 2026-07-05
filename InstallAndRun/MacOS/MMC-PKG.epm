@@ -48,20 +48,16 @@ f 755 root wheel ${appdir}/Info.plist ${scripts}/Info.plist nostrip()
 
 # Wrapper script and icon files
 f 755 root wheel ${bindir}/node_index      ${scripts}/node_index.sh nostrip()
-f 644 root wheel ${resdir}/MMCicon-256.png ${scripts}/MMCicon-256.png
+f 644 root wheel ${resdir}/MMCicon-256.png ${scripts}/../MMCicon-256.png
 
-# Copy the MMC-SERVER source tarball and the MMC-CLIENT distribution tarball into the application bundle
+# Copy the MMC-SERVER source tarball into the application bundle
 f 644 root wheel ${resdir}/MMC-SERVER-source.tar.gz ${scripts}/MMC-SERVER-source-${version}.tar.gz
-f 644 root wheel ${resdir}/MMC-CLIENT-bundle.tar.gz ${scripts}/MMC-CLIENT-bundle-${version}.tar.gz
-
-# Create directory to hold unpacked MMC-CLIENT spa resources
-d 755 root wheel ${resdir}/public -
 
 %postinstall << EOF
-#!/bin/sh
-# Post-installation script to unpack the MMC-SERVER and MMC-CLIENT tarballs
+#!/bin/bash
+export PATH=$$PATH:/usr/local/bin
+# Post-installation script to unpack the MMC-SERVER tarballs
 cd ${resdir}
-tar -xzf MMC-SERVER-source.tar.gz -C .
-tar -xzf MMC-CLIENT-bundle.tar.gz --strip-components=1 -C public
-npm ci
+/usr/bin/tar -xzf MMC-SERVER-source.tar.gz --strip-components=1
+/usr/local/bin/npm install --omit=dev
 EOF
