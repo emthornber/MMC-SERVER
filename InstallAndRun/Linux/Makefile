@@ -8,9 +8,9 @@
 ################################################################################
 
 #APPNAME=${shell npm pkg get name | tr -d '"'}
+LDIR=Linux
 APPNAME=MMC-SERVER
-APPDIR=${shell basename $(PWD)}
-APPPKG := MMC-PKG.epm
+APPPKG := $(LDIR)/MMC-PKG.epm
 VERSION=${shell npm pkg get version | tr -d '"'}
 
 # Tools
@@ -18,12 +18,12 @@ EPM := $(shell which epm)
 RM=/bin/rm -f
 TS=`date "+%y%m%d-%H%M"`
 
-EPMARGS := -nsm -vv --output-dir ./ appname=${APPNAME} version=${VERSION} $(APPNAME)
+EPMARGS := -nsm -vv --output-dir $(LDIR) appname=${APPNAME} version=${VERSION} $(APPNAME)
 
 all: deb
 
 .PHONY: all deb
 
 deb:
-	$(RM) $@-*.log
-	$(EPM) -a all -f $@ ${EPMARGS} $(APPPKG) 2>&1 | tee $@-$(TS).log
+	$(RM) $(LDIR)/$@-*.log
+	$(EPM) -a all -f $@ ${EPMARGS} $(APPPKG) 2>&1 | tee $(LDIR)/$@-$(TS).log

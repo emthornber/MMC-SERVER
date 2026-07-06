@@ -26,10 +26,10 @@ all: debian macos
 .PHONY: all debian macos src
 
 debian : src
-	make -C ${WORKDIR}/Linux deb
+	make -C ${WORKDIR} -f Linux/Makefile deb
 
 macos : src
-	make -C ${WORKDIR}/MacOS macos
+	make -C ${WORKDIR} -f MacOS/Makefile macos
 
 src:
 	( cd ${WORKDIR} && sed -e "s/|appdir|/${APPDIR}/g" excluded_files.txt.in > excluded_files.txt )

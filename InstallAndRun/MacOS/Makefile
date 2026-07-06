@@ -8,9 +8,9 @@
 ################################################################################
 
 #APPNAME=${shell npm pkg get name | tr -d '"'}
+MDIR=MacOS
 APPNAME=MMC-SERVER
-APPDIR=${shell basename $(PWD)}
-APPPKG := MMC-PKG.epm
+APPPKG := $(MDIR)/MMC-PKG.epm
 VERSION=${shell npm pkg get version | tr -d '"'}
 
 # Tools
@@ -18,13 +18,13 @@ EPM := $(shell which epm)
 RM=/bin/rm -f
 TS=`date "+%y%m%d-%H%M"`
 
-EPMARGS := -nsm -vv --output-dir ./ appname=${APPNAME} version=${VERSION} $(APPNAME)
+EPMARGS := -nsm -vv --output-dir $(MDIR) appname=${APPNAME} version=${VERSION} $(APPNAME)
 
 all: macos
 
 .PHONY: all macos
 
 macos:
-	$(RM) $@-*.log
+	$(RM) $(MDIR)/$@-*.log
 	sed -e "s/|version|/${VERSION}/g" Info.plist.in > Info.plist
-	$(EPM) -a all -f $@ ${EPMARGS} $(APPPKG) 2>&1 | tee $@-$(TS).log
+	$(EPM) -a all -f $@ ${EPMARGS} $(APPPKG) 2>&1 | tee $(MDIR)/$@-$(TS).log

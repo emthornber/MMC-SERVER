@@ -14,6 +14,8 @@
 #   1 July, 2026 - E M Thornber
 #   Updated to use the new MMC-SERVER distribution tarball.
 #
+#	Note: CWD is expected to be InstallAndRun
+#
 #   Copyright (c) 2026 Model Electronics Railway Group Ltd
 ################################################################################
 #
@@ -26,7 +28,7 @@ $appdir=/Applications/${appname}.app/Contents
 $bindir=${appdir}/MacOS
 $resdir=${appdir}/Resources
 # Sources and tarballs
-$scripts=InstallAndRun/MacOS
+$scripts=MacOS
 
 %product Module Management Console Server
 %copyright 2026 MERG
@@ -48,10 +50,10 @@ f 755 root wheel ${appdir}/Info.plist ${scripts}/Info.plist nostrip()
 
 # Wrapper script and icon files
 f 755 root wheel ${bindir}/node_index      ${scripts}/node_index.sh nostrip()
-f 644 root wheel ${resdir}/MMCicon-256.png ${scripts}/../MMCicon-256.png
+f 644 root wheel ${resdir}/MMCicon-256.png ./MMCicon-256.png
 
 # Copy the MMC-SERVER source tarball into the application bundle
-f 644 root wheel ${resdir}/MMC-SERVER-source.tar.gz ${scripts}/MMC-SERVER-source-${version}.tar.gz
+f 644 root wheel ${resdir}/MMC-SERVER-source.tar.gz ./MMC-SERVER-source-${version}.tar.gz
 
 %postinstall << EOF
 #!/bin/bash

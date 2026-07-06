@@ -7,6 +7,8 @@
 #   5 July, 2026 - E M Thornber
 #   Created
 #
+#	Note: CWD is expected to be InstallAndRun/
+#
 #   Copyright (c) 2026 Model Electronics Railway Group Ltd
 ################################################################################
 #
@@ -17,8 +19,9 @@
 # Directories
 $bindir=/usr/local/bin
 $resdir=/usr/local/share/${appname}
+$dtpdir=/usr/local/share/applications
 # Sources
-$scripts=InstallAndRun/Linux
+$scripts=Linux
 
 %product Module Management Console Server
 %copyright 2026 MERG
@@ -37,23 +40,21 @@ d 755 root root /usr -
 d 755 root root /usr/local -
 d 755 root root ${bindir} -
 d 755 root root /usr/local/share -
-d 755 root root ${resdir} -
+d 777 root root ${resdir} -
 
 # Desktop file
-d 755 root root /usr/share -
-d 755 root root /usr/share/applications -
-f 644 root root /usr/share/applications/${appname}.desktop ${scripts}/mmc-server.desktop
+d 755 root root ${dtpdir} -
+f 644 root root ${dtpdir}/${appname}.desktop ${scripts}/mmc-server.desktop
 
-# Wrapper script, icon and bundled js files
+# Wrapper script and icon files
 f 755 root root ${bindir}/mmc-server      ${scripts}/mmc-server.bash nostrip()
-f 644 root root ${resdir}/MMCicon-256.png ${scripts}/../MMCicon-256.png
+f 644 root root ${resdir}/MMCicon-256.png ./MMCicon-256.png
 
-# Copy the MMC-SERVER source tarball into the application bundle
-f 644 root root ${resdir}/MMC-SERVER-source.tar.gz ${scripts}/MMC-SERVER-source-${version}.tar.gz
+# Copy the MMC-SERVER source tarball into the share directory
+f 644 root root ${resdir}/MMC-SERVER-source.tar.gz ./MMC-SERVER-source-${version}.tar.gz
 
 %postinstall << EOF
 #!/bin/bash
-# export PATH=$$PATH:/usr/bin
 # Post-installation script to unpack the MMC-SERVER tarballs
 cd ${resdir}
 /usr/bin/tar -xzf MMC-SERVER-source.tar.gz --strip-components=1
