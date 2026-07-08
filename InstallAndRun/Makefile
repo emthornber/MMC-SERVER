@@ -35,5 +35,5 @@ src:
 	( cd ${WORKDIR} && sed -e "s/|appdir|/${APPDIR}/g" excluded_files.txt.in > excluded_files.txt )
 	npm shrinkwrap
 	( cd .. && \
-		${TAR} -cvf - --exclude-vcs --exclude-from ${EXCLUDE_FILE} ${APPDIR}/* ) | \
+		${TAR} -cvf - --exclude-vcs -X ${EXCLUDE_FILE} ${APPDIR}/* ) | \
 		${GZIP} -9 > ${WORKDIR}/${APPNAME}-source-${VERSION}.tar.gz

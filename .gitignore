@@ -8,6 +8,7 @@ unit_tests/logs
 unit_tests/test_output
 ./unit_tests/test_output/
 VLCB-server/config/nodeDescriptors.json
+npm-shrinkwrap.json
 package-lock.json
 excluded_files.txt
 dist/

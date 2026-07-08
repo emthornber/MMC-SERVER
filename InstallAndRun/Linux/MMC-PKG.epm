@@ -19,7 +19,7 @@
 # Directories
 $bindir=/usr/local/bin
 $resdir=/usr/local/share/${appname}
-$dtpdir=/usr/local/share/applications
+$dtpdir=/usr/share/applications
 # Sources
 $scripts=Linux
 
@@ -43,6 +43,7 @@ d 755 root root /usr/local/share -
 d 777 root root ${resdir} -
 
 # Desktop file
+d 755 root root /usr/share -
 d 755 root root ${dtpdir} -
 f 644 root root ${dtpdir}/${appname}.desktop ${scripts}/mmc-server.desktop
 
