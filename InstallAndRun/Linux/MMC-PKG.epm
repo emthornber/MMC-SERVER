@@ -7,6 +7,9 @@
 #   5 July, 2026 - E M Thornber
 #   Created
 #
+#   9 July, 2926 - E M Thornber
+#   Explicit;y create the logs directory and set permissions to 777
+#
 #	Note: CWD is expected to be InstallAndRun/
 #
 #   Copyright (c) 2026 Model Electronics Railway Group Ltd
@@ -19,6 +22,7 @@
 # Directories
 $bindir=/usr/local/bin
 $resdir=/usr/local/share/${appname}
+$logdir=${resdir}/logs
 $dtpdir=/usr/share/applications
 # Sources
 $scripts=Linux
@@ -40,7 +44,8 @@ d 755 root root /usr -
 d 755 root root /usr/local -
 d 755 root root ${bindir} -
 d 755 root root /usr/local/share -
-d 777 root root ${resdir} -
+d 755 root root ${resdir} -
+d 777 root root ${logdir} -
 
 # Desktop file
 d 755 root root /usr/share -

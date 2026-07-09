@@ -14,6 +14,9 @@
 #   1 July, 2026 - E M Thornber
 #   Updated to use the new MMC-SERVER distribution tarball.
 #
+#   9 July, 2026 - E M Thornber
+#   Explicit;y create the logs directory and set permissions to 777
+#
 #	Note: CWD is expected to be InstallAndRun
 #
 #   Copyright (c) 2026 Model Electronics Railway Group Ltd
@@ -27,6 +30,8 @@
 $appdir=/Applications/${appname}.app/Contents
 $bindir=${appdir}/MacOS
 $resdir=${appdir}/Resources
+$logdir=${resdir}/logs
+
 # Sources and tarballs
 $scripts=MacOS
 
@@ -45,6 +50,7 @@ d 755 root wheel /Applications/${appname}.app -
 d 755 root wheel ${appdir} -
 d 755 root wheel ${bindir} -
 d 755 root wheel ${resdir} -
+d 777 root wheel ${logdir} -
 
 f 755 root wheel ${appdir}/Info.plist ${scripts}/Info.plist nostrip()
 
