@@ -26,5 +26,5 @@ all: macos
 
 macos:
 	$(RM) $(MDIR)/$@-*.log
-	sed -e "s/|version|/${VERSION}/g" Info.plist.in > Info.plist
+	sed -e "s/|version|/${VERSION}/g" $(MDIR)/Info.plist.in > $(MDIR)/Info.plist
 	$(EPM) -a all -f $@ ${EPMARGS} $(APPPKG) 2>&1 | tee $(MDIR)/$@-$(TS).log
