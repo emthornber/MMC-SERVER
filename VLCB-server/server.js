@@ -1,55 +1,121 @@
 'use strict';
 const winston = require('winston');
-const name = "server.js"
+const path = require('path');
+
+const name = 'server.js';
 winston.info({message: name + ': Loaded'});
-const utils = require('./utilities.js');
 
-// pass in the system directory based on the directory of this module
-const config = require('../VLCB-server/configuration.js')(__dirname + '/config')
+let defaultConfig;
 
-// set config items
-config.setSocketServerPort(5552);
-
-//run()
-
-let status = {
-  "busConnection":{
-  "state":true
+const status = {
+  busConnection: {
+    state: true
   },
   mode: 'STARTUP'
+};
+
+function getDependencies(overrides) {
+  return {
+    config: overrides.config || getDefaultConfig(),
+    socketServerFactory: overrides.socketServerFactory || require('./socketServer').socketServer,
+    cbusServerFactory: overrides.cbusServerFactory || require('./cbusServer'),
+    messageRouterFactory: overrides.messageRouterFactory || require('./messageRouter'),
+    mergAdminNodeFactory: overrides.mergAdminNodeFactory || require('./mergAdminNode.js'),
+    programNodeFactory: overrides.programNodeFactory || require('./programNodeMMC.js'),
+    status: overrides.status || status
+  };
 }
 
-exports.run = async function run(){
-// async function run(){
-
-  // instantiate objects and pass to socketServer
-  // this is so we can use mocks for unit testing
-  // a technique sometimes called dependancy injection
-  const socketServer = require('./socketServer')
-  const cbusServer = require('./cbusServer')(config)
-  const messageRouter = require('./messageRouter')(config)
-  const mergAdminNode = require('./mergAdminNode.js')(config)
-  const programNode = require('./programNodeMMC.js')(config)
-  socketServer.socketServer(config, mergAdminNode, messageRouter, cbusServer, programNode, status)
-
+function getDefaultConfig() {
+  if (!defaultConfig) {
+    const logsPath = path.join(process.env.MMC_SERVER_APP_STORAGE_DIRECTORY || process.cwd(), 'logs');
+    defaultConfig = require('./configuration.js')(__dirname, logsPath);
+    const socketServerPort = parseInt(process.env.MMC_SERVER_SOCKET_PORT || '5552', 10);
+    defaultConfig.setSocketServerPort(isNaN(socketServerPort) || socketServerPort < 0 ? 5552 : socketServerPort);
+  }
+  return defaultConfig;
 }
 
+async function disposeResources(resources) {
+  const errors = [];
 
-function CommandLineArgument(argument){
-	// command line arguments will be 'node' <javascript file started> '--' <arguments starting at index 3>
-	for (var item in process.argv){
-//    winston.info({message: 'main: argv ' + item + ' ' + process.argv[item]});
-    if (process.argv[item].toLowerCase().includes(argument)){
-      return process.argv[item];
+  for (const resource of resources.reverse()) {
+    try {
+      if (typeof resource.close === 'function') {
+        await closeResource(resource.close.bind(resource));
+      } else if (typeof resource.dispose === 'function') {
+        await closeResource(resource.dispose.bind(resource));
+      }
+    } catch (error) {
+      errors.push(error);
     }
-	}
-  return undefined;
+  }
+
+  if (errors.length === 1) {
+    throw errors[0];
+  }
+  if (errors.length > 1) {
+    throw new AggregateError(errors, 'Failed to close server resources');
+  }
 }
 
-async function terminateApp(message){
-  winston.info({message: "App terminate : " + message});
-  utils.sleep(500);   // allow time for logs to catch up
-  winston.info({message: "Exiting.... "});
-  process.exit()
+function closeResource(close) {
+  return Promise.race([
+    close(),
+    new Promise((resolve) => setTimeout(resolve, 1000))
+  ]);
 }
 
+exports.run = async function run(overrides = {}) {
+  const dependencies = getDependencies(overrides);
+  const resources = [];
+  let closePromise;
+
+  try {
+    const cbusServer = await dependencies.cbusServerFactory(dependencies.config);
+    resources.push(cbusServer);
+
+    const messageRouter = await dependencies.messageRouterFactory(dependencies.config);
+    resources.push(messageRouter);
+
+    const mergAdminNode = await dependencies.mergAdminNodeFactory(dependencies.config);
+    resources.push(mergAdminNode);
+
+    const programNode = await dependencies.programNodeFactory(dependencies.config);
+    resources.push(programNode);
+
+    const socketServer = await dependencies.socketServerFactory(
+      dependencies.config,
+      mergAdminNode,
+      messageRouter,
+      cbusServer,
+      programNode,
+      dependencies.status
+    );
+    resources.push(socketServer);
+
+    await socketServer.listening;
+
+    return {
+      cbusServer,
+      messageRouter,
+      mergAdminNode,
+      programNode,
+      socketServer,
+      status: dependencies.status,
+      close() {
+        if (!closePromise) {
+          closePromise = disposeResources([...resources]);
+        }
+        return closePromise;
+      }
+    };
+  } catch (startupError) {
+    try {
+      await disposeResources(resources);
+    } catch (cleanupError) {
+      startupError.cleanupError = cleanupError;
+    }
+    throw startupError;
+  }
+};

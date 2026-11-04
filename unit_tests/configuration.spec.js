@@ -4,8 +4,7 @@ const expect = require('chai').expect;
 const itParam = require('mocha-param');
 const fs = require('fs');
 const jsonfile = require('jsonfile')
-var path = require('path');
-const utils = require('../VLCB-server/utilities.js');
+const path = require('path');
 
 
 // Scope:
@@ -15,6 +14,7 @@ const utils = require('../VLCB-server/utilities.js');
 // var has function scope (or global if top level)
 // const has block scope (like let), but can't be changed through reassigment or redeclared
 
+const testSystemDirectory = "./unit_tests/test_output"
 const testSystemConfigPath = "./unit_tests/test_output/config"
 const testUserConfigPath = "./unit_tests/test_output/test_user"
 
@@ -26,14 +26,15 @@ fs.rmSync(path.join(testSystemConfigPath, 'modules'), { recursive: true, force: 
 winston.info({message: 'Deleting user path ' + testUserConfigPath});
 fs.rmSync(path.join(testUserConfigPath), { recursive: true, force: true });
 
-const config = require('../VLCB-server/configuration.js')(testSystemConfigPath)
+const logsPath = path.join(process.cwd(), "unit_tests", "logs")
+const config = require('../VLCB-server/configuration.js')(testSystemDirectory, logsPath)
 //const config = require('../VLCB-server/configuration.js')(testSystemConfigPath, testUserConfigPath)
 
 // override direectories set in configuration constructor
 config.singleUserDirectory = testUserConfigPath
 config.currentUserDirectory = config.singleUserDirectory
 
-async function createTestFiles(){
+function createTestFiles(){
   var testContent = {"timestamp":Date.now()}
 
   // ensure the following files exist
@@ -46,15 +47,15 @@ async function createTestFiles(){
   //
 
   // ensure 'system' modules directory exists
-  config.createDirectory(path.join(config.systemDirectory, "modules"))
+  config.createDirectory(path.join(config.systemDirectory, "config", "modules"))
   // write test files
-  testFilePath = path.join(config.systemDirectory, "modules", "MDFTEST-YYYY-1a--P11.json")
+  var testFilePath = path.join(config.systemDirectory, "config", "modules", "MDFTEST-YYYY-1a--P11.json")
   jsonfile.writeFileSync(testFilePath, testContent)
-  testFilePath = path.join(config.systemDirectory, "modules", "MDFTEST-YYYY-1b.json")
+  testFilePath = path.join(config.systemDirectory, "config", "modules", "MDFTEST-YYYY-1b.json")
   jsonfile.writeFileSync(testFilePath, testContent)
-  testFilePath = path.join(config.systemDirectory, "modules", "MDFTEST-YYYY-2a.json")
+  testFilePath = path.join(config.systemDirectory, "config", "modules", "MDFTEST-YYYY-2a.json")
   jsonfile.writeFileSync(testFilePath, testContent)
-  testFilePath = path.join(config.systemDirectory, "modules", "MDFTEST-YYYY-2a--p11.json")
+  testFilePath = path.join(config.systemDirectory, "config", "modules", "MDFTEST-YYYY-2a--p11.json")
   jsonfile.writeFileSync(testFilePath, testContent)
 
   // ensure 'user' modules directory exists
@@ -71,7 +72,7 @@ async function createTestFiles(){
 describe('configuration tests', function(){
 
 
-	before(function(done) {
+	before(function() {
 		winston.info({message: ' '});
 		winston.info({message: '================================================================================'});
     //                      12345678901234567890123456789012345678900987654321098765432109876543210987654321
@@ -80,8 +81,6 @@ describe('configuration tests', function(){
 		winston.info({message: ' '});
     //
     createTestFiles()
-    //
-		done();
 	});
 
 	beforeEach(function() {
@@ -90,12 +89,8 @@ describe('configuration tests', function(){
         // ensure expected CAN header is reset before each test run
 	});
 
-	after(function(done) {
+	after(function() {
  		winston.info({message: ' '});   // blank line to separate tests
-    // bit of timing to ensure all winston messages get sent before closing tests completely
-    setTimeout(function(){
-      done();
-    }, 100);
 	});																										
 
 
@@ -108,7 +103,7 @@ describe('configuration tests', function(){
   //
   // Combined node backup test - does read, write, list & delete
   //
-  it("Node BackupFile test", function (done) {
+  it("Node BackupFile test", function () {
     winston.info({message: 'unit_test: BEGIN BackupFile test '})
     let layoutName = 'test_backup_layout'
     let nodeNumber = 999
@@ -130,25 +125,20 @@ describe('configuration tests', function(){
     //
     config.writeNodeBackupFile(layoutName, nodeNumber, fileName1, backupFile1)
     var result = config.readNodeBackup(layoutName, nodeNumber, fileName1)
-    setTimeout(function(){
-      winston.info({message: 'result: ' + JSON.stringify(result)})
-      expect(JSON.stringify(result.layoutName)).to.equal(JSON.stringify(layoutName));
-      // 3rd backup so should be three entries, but just check for first backup
-      config.writeNodeBackupFile(layoutName, nodeNumber, fileName3, backupFile3)
-      var list1 = config.getListOfNodeBackups(layoutName, nodeNumber)
-      expect (list1).to.include(fileName1)
-      expect(list1.length).to.equal(2 + startingCount)
-      // now delete initial backup & get new list
-      config.deleteNodeBackup(layoutName, nodeNumber, fileName1)
-      var list2 = config.getListOfNodeBackups(layoutName, nodeNumber)
-      expect (list2).to.not.include(fileName1)
-      expect(list2.length).to.equal(1 + startingCount)
-      var list3 = config.renameNodeBackup(layoutName, nodeNumber, fileName3, "testBackupFile.json")
-      winston.info({message: 'list3: ' + JSON.stringify(list3)})
-      expect (list3).to.include("testBackupFile.json")
-      winston.info({message: 'unit_test: END BackupFile test'})
-      done();
-		}, 10);
+    winston.info({message: 'result: ' + JSON.stringify(result)})
+    expect(JSON.stringify(result.layoutName)).to.equal(JSON.stringify(layoutName));
+    config.writeNodeBackupFile(layoutName, nodeNumber, fileName3, backupFile3)
+    var list1 = config.getListOfNodeBackups(layoutName, nodeNumber)
+    expect (list1).to.include(fileName1)
+    expect(list1.length).to.equal(2 + startingCount)
+    config.deleteNodeBackup(layoutName, nodeNumber, fileName1)
+    var list2 = config.getListOfNodeBackups(layoutName, nodeNumber)
+    expect (list2).to.not.include(fileName1)
+    expect(list2.length).to.equal(1 + startingCount)
+    var list3 = config.renameNodeBackup(layoutName, nodeNumber, fileName3, "testBackupFile.json")
+    winston.info({message: 'list3: ' + JSON.stringify(list3)})
+    expect (list3).to.include("testBackupFile.json")
+    winston.info({message: 'unit_test: END BackupFile test'})
   })
 
   
@@ -156,10 +146,9 @@ describe('configuration tests', function(){
   // returns list of backup file names for all nodes
   // also creates eventBus 'LIST_OF_BACKUPS_FOR_ALL_NODES' with list as data
   //
-  it("getListOfBackupsForAllNodes test", function (done) {
+  it("getListOfBackupsForAllNodes test", function () {
     winston.info({message: 'unit_test: BEGIN getListOfBackupsForAllNodes test '})
     var layoutName = 'test_backup_layout'
-    var layoutData = {layoutDetails:{title: layoutName}} 
     var backupNode1 = {moduleName:"CANACC5"}
     var backupNode2 = {moduleName:"CANMIO"}
     config.writeNodeBackupFile(layoutName, 300, "backupNode1.json", backupNode1)
@@ -171,54 +160,48 @@ describe('configuration tests', function(){
       eventList = data
       winston.info({message: `unit_test: eventBus LIST_OF_BACKUPS_FOR_ALL_NODES: ${JSON.stringify(eventList)}`})
     })
-    setTimeout(function(){
-      var list = config.getListOfBackupsForAllNodes(layoutName)
-      winston.info({message: `unit_test: getListOfBackupsForAllNodes list: ${JSON.stringify(list)}`})
-      expect (list["Node300"].length).to.equal(2)
-      expect (list["Node301"].length).to.equal(1)
-      expect (list).to.equal(eventList)
-      winston.info({message: 'unit_test: END getListOfBackupsForAllNodes test '})
-      done();
-		}, 100);
+    var list = config.getListOfBackupsForAllNodes(layoutName)
+    winston.info({message: `unit_test: getListOfBackupsForAllNodes list: ${JSON.stringify(list)}`})
+    expect (list["Node300"].length).to.equal(2)
+    expect (list["Node301"].length).to.equal(1)
+    expect (list).to.equal(eventList)
+    winston.info({message: 'unit_test: END getListOfBackupsForAllNodes test '})
   })
 
 
   //
   // test writeBusTraffic
   //
-  it("writeBusTraffic test", function (done) {
+  it("writeBusTraffic test", async function () {
     winston.info({message: 'unit_test: BEGIN writeBusTraffic test '})
     config.writeBusTraffic("test data 1")
     config.writeBusTraffic("test data 2")
     config.writeBusTraffic("test data 3")
-    setTimeout(function(){
-      done();
-      winston.info({message: 'unit_test: END writeBusTraffic test '})
-		}, 50);
+    await new Promise((resolve, reject) => {
+      config.bustrafficLogStream.write('', (error) => error ? reject(error) : resolve())
+    })
+    winston.info({message: 'unit_test: END writeBusTraffic test '})
   })
 
 
   //
   // test createDirectory
   //
-  it("createDirectory test", function (done) {
+  it("createDirectory test", function () {
     winston.info({message: 'unit_test: BEGIN createDirectory test '})
     var layout = 'test_createDirectory_' + Date.now()
     config.createDirectory(path.join(testUserConfigPath, 'layouts', layout) )
     config.currentUserDirectory = testUserConfigPath
     var layout_list = config.getListOfLayouts()
-    setTimeout(function(){
-      winston.info({message: 'unit test: layout_list: ' + JSON.stringify(layout_list)})
-      expect(layout_list).to.include(layout)
-      done();
-		}, 50);
+    winston.info({message: 'unit test: layout_list: ' + JSON.stringify(layout_list)})
+    expect(layout_list).to.include(layout)
   })
 
   //
   it("currentLayoutFolder test", function () {
     winston.info({message: 'unit_test: BEGIN currentLayoutFolder test '})
     var layout = 'test_currentLayout_' + Date.now()
-    result = config.setCurrentLayoutFolder(layout)
+    config.setCurrentLayoutFolder(layout)
     winston.info({message: 'result: ' + config.getCurrentLayoutFolder()})
     expect(config.getCurrentLayoutFolder()).to.equal(layout)
     winston.info({message: 'unit_test: END currentLayoutFolder test'})
@@ -227,44 +210,35 @@ describe('configuration tests', function(){
 
 
   //
-  it("eventBus test", function (done) {
+  it("eventBus test", function () {
     winston.info({message: 'unit_test: BEGIN eventBus test '});
     var result = false
     config.eventBus.once('test', function () {
       result = true
     })
     config.eventBus.emit('test')
-    setTimeout(function(){
-      winston.info({message: 'result: ' + result})
-      expect(result).to.equal(true);
-      winston.info({message: 'unit_test: END test test'})
-        done();
-		}, 50);
+    winston.info({message: 'result: ' + result})
+    expect(result).to.equal(true);
+    winston.info({message: 'unit_test: END test test'})
   })
 
   //
   //
-  it("copyLayout", function (done) {
+  it("copyLayout", function () {
     winston.info({message: 'unit_test: BEGIN copyLayout test '})
-    result = config.copyLayout("default layout", "copied Layout")
-    setTimeout(function(){
-      winston.info({message: 'unit_test: END copyLayout test'})
-      done();
-		}, 50);
+    config.copyLayout("default layout", "copied Layout")
+    winston.info({message: 'unit_test: END copyLayout test'})
   })
 
 
   //
   //
-  it("readLayoutData", function (done) {
+  it("readLayoutData", function () {
     winston.info({message: 'unit_test: BEGIN readLayoutData test '})
-    result = config.readLayoutData()
-    setTimeout(function(){
-      winston.info({message: 'result: ' + JSON.stringify(result)})
-      expect(result).to.have.property('layoutDetails')
-      winston.info({message: 'unit_test: END readLayoutData test'})
-        done();
-		}, 50);
+    const result = config.readLayoutData()
+    winston.info({message: 'result: ' + JSON.stringify(result)})
+    expect(result).to.have.property('layoutDetails')
+    winston.info({message: 'unit_test: END readLayoutData test'})
   })
 
   function GetTestCase_layout() {
@@ -279,7 +253,7 @@ describe('configuration tests', function(){
   }
 
   //
-  itParam("writeLayoutData test ${JSON.stringify(value)}", GetTestCase_layout(), function (done, value) {
+  itParam("writeLayoutData test ${JSON.stringify(value)}", GetTestCase_layout(), function (value) {
     winston.info({message: 'unit_test: BEGIN writeLayoutData test '})
     var data = {
       "layoutDetails": {
@@ -290,15 +264,12 @@ describe('configuration tests', function(){
       "nodeDetails": {},
       "eventDetails": {}
     }
-    result = config.setCurrentLayoutFolder("write_test")
+    config.setCurrentLayoutFolder("write_test")
     config.writeLayoutData(data)
-    result = config.readLayoutData()
-    setTimeout(function(){
-      winston.info({message: 'result: ' + JSON.stringify(result)})
-      expect(result.layoutDetails.title).to.equal(value.layout + " layout");
-      winston.info({message: 'unit_test: END writeLayoutData test'})
-        done();
-		}, 50);
+    const result = config.readLayoutData()
+    winston.info({message: 'result: ' + JSON.stringify(result)})
+    expect(result.layoutDetails.title).to.equal(value.layout + " layout");
+    winston.info({message: 'unit_test: END writeLayoutData test'})
   })
 
 
@@ -314,7 +285,7 @@ describe('configuration tests', function(){
   }
 
   //
-  itParam("writeNodeConfig test ${JSON.stringify(value)}", GetTestCase_node(), function (done, value) {
+  itParam("writeNodeConfig test ${JSON.stringify(value)}", GetTestCase_node(), function (value) {
     winston.info({message: 'unit_test: BEGIN writeNodeConfig test '})
     var data = {
       "nodes": {
@@ -324,51 +295,30 @@ describe('configuration tests', function(){
       }
     }
     config.writeNodeConfig(data)
-    result = config.readNodeConfig()
-    setTimeout(function(){
-      winston.info({message: 'result: ' + JSON.stringify(result)})
-      expect(result.nodes["301"].nodeNumber).to.equal(value.nodeNumber);
-      winston.info({message: 'unit_test: END writeNodeConfig test'})
-        done();
-		}, 50);
+    const result = config.readNodeConfig()
+    winston.info({message: 'result: ' + JSON.stringify(result)})
+    expect(result.nodes["301"].nodeNumber).to.equal(value.nodeNumber);
+    winston.info({message: 'unit_test: END writeNodeConfig test'})
   })
 
   //
-  it("readMergConfig test", function (done) {
+  it("readMergConfig test", function () {
     winston.info({message: 'unit_test: BEGIN readMergConfig test '})
     var result = config.readMergConfig()
-    setTimeout(function(){
-      winston.info({message: 'result: ' + JSON.stringify(result)})
-      expect(result).to.have.property('modules')
-      winston.info({message: 'unit_test: END readMergConfig test'})
-        done();
-		}, 50);
+    winston.info({message: 'result: ' + JSON.stringify(result)})
+    expect(result).to.have.property('modules')
+    winston.info({message: 'unit_test: END readMergConfig test'})
   })
 
 
   //
-  it("readServiceDefinitions test", function (done) {
+  it("readServiceDefinitions test", function () {
     winston.info({message: 'unit_test: BEGIN readServiceDefinitions test '})
     var result = config.readServiceDefinitions()
-    setTimeout(function(){
-      winston.info({message: 'result length: ' + JSON.stringify(result).length})
-      expect(JSON.stringify(result).length).to.be.greaterThan(3)
-      winston.info({message: 'unit_test: END readServiceDefinitions test'})
-        done();
-		}, 50);
+    winston.info({message: 'result length: ' + JSON.stringify(result).length})
+    expect(JSON.stringify(result).length).to.be.greaterThan(3)
+    winston.info({message: 'unit_test: END readServiceDefinitions test'})
   })
-
-
-  function GetTestCase_readModuleDescriptor() {
-    var arg1, arg2, testCases = [];
-    for (var a = 1; a<= 3; a++) {
-      if (a == 1) {arg1 = "test#1", arg2 = 'pass', arg3 = 1}
-      if (a == 2) {arg1 = "test#2", arg2 = 'pass', arg3 = 2}
-      if (a == 3) {arg1 = "test#3", arg2 = 'fail', arg3 = 3}
-      testCases.push({'file':arg1, 'result':arg2, 'testNumber':arg3});
-    }
-    return testCases;
-  }
 
 
   // test Aims
@@ -377,7 +327,7 @@ describe('configuration tests', function(){
   // write module - should be written to test 'user' module folder
   // read file & check it contains the written data
   //
-  it("writeModuleDescriptor test", function (done) {
+  it("writeModuleDescriptor test", function () {
     winston.info({message: 'unit_test: BEGIN writeModuleDescriptor test '})
     // ensure 'user' modules directory exists
     config.currentUserDirectory = testUserConfigPath
@@ -397,37 +347,31 @@ describe('configuration tests', function(){
                         "moduleDescriptorFilename":"writeTest.json"}
       config.writeModuleDescriptor(testPattern)
     }
-    setTimeout(function(){
-      file = jsonfile.readFileSync(testFilePath)
-      winston.info({message: 'unit_test: result length: ' + JSON.stringify(file).length})
-      expect(JSON.stringify(file).length).to.be.greaterThan(3)
-      expect (file.toString()).to.be.equal(testPattern.toString())
-      expect (JSON.stringify(file)).to.be.equal(JSON.stringify(testPattern))
-      winston.info({message: 'unit_test: file: ' + JSON.stringify(file)})
-      winston.info({message: 'unit_test: END writeModuleDescriptor test'})
-      done();
-		}, 50);
+    const file = jsonfile.readFileSync(testFilePath)
+    winston.info({message: 'unit_test: result length: ' + JSON.stringify(file).length})
+    expect(JSON.stringify(file).length).to.be.greaterThan(3)
+    expect (file.toString()).to.be.equal(testPattern.toString())
+    expect (JSON.stringify(file)).to.be.equal(JSON.stringify(testPattern))
+    winston.info({message: 'unit_test: file: ' + JSON.stringify(file)})
+    winston.info({message: 'unit_test: END writeModuleDescriptor test'})
   })
 
   //
   //
   //
-  it("getModuleDescriptorFileList test", function (done) {
+  it("getModuleDescriptorFileList test", function () {
     winston.info({message: 'unit_test: BEGIN getModuleDescriptorFileList test '})
     //
     winston.info({message: 'currentUserDirectory: ' + config.currentUserDirectory})
     var result = config.getModuleDescriptorFileList("YYYY")
-    setTimeout(function(){
-      winston.info({message: 'result: ' + JSON.stringify(result)})
-      expect (result.length).to.be.equal(3)
-      winston.info({message: 'unit_test: END getModuleDescriptorFileList test'})
-        done();
-		}, 50);
+    winston.info({message: 'result: ' + JSON.stringify(result)})
+    expect (result.length).to.be.equal(3)
+    winston.info({message: 'unit_test: END getModuleDescriptorFileList test'})
   })
 
 
   function GetTestCase_getMatchingMDFList() {
-    var arg1, arg2, testCases = [];
+    var arg1, testCases = [];
     for (var a = 1; a<= 2; a++) {
       if (a == 1) {arg1 = "system"}
       if (a == 2) {arg1 = "user"}
@@ -456,7 +400,7 @@ describe('configuration tests', function(){
     winston.info({message: 'unit_test: BEGIN getLayoutList test '})
     // ensure 'layouts' folder exists in 'test' user directory
 		config.createDirectory(config.userConfigPath + '/layouts/')
-    result = config.getListOfLayouts()
+    const result = config.getListOfLayouts()
     winston.info({message: 'result: ' + result})
 //    expect(config.getCurrentLayoutFolder()).to.equal(testFolder)
     winston.info({message: 'unit_test: END getLayoutList test'})
@@ -464,7 +408,7 @@ describe('configuration tests', function(){
 
 
   function GetTestCase_port() {
-    var arg1, arg2, testCases = [];
+    var arg1, testCases = [];
     for (var a = 1; a<= 3; a++) {
       if (a == 1) {arg1 = 0}
       if (a == 2) {arg1 = 1}
@@ -478,7 +422,7 @@ describe('configuration tests', function(){
   itParam("socketServerPort test ${JSON.stringify(value)}", GetTestCase_port(), function (value) {
     winston.info({message: 'unit_test: BEGIN socketServerPort test '});
     config.setSocketServerPort(value.port);
-    result = config.getSocketServerPort();
+    const result = config.getSocketServerPort();
     winston.info({message: 'result: ' + result});
     expect(result).to.equal(value.port);
     winston.info({message: 'unit_test: END socketServerPort test'});
@@ -524,7 +468,7 @@ describe('configuration tests', function(){
   itParam("getMatchingModuleDescriptorFile test ${JSON.stringify(value)}", GetTestCase_MDF(), async function (value) {
     winston.info({message: 'unit_test: BEGIN getMatchingModuleDescriptorFile test ' + JSON.stringify(value)});
 
-    result = config.getMatchingModuleDescriptorFile(value.moduleIdentifier, value.version, value.processorType);
+    const result = config.getMatchingModuleDescriptorFile(value.moduleIdentifier, value.version, value.processorType);
     winston.info({message: 'result: ' + JSON.stringify(result)})
     if (value.result != undefined){
       expect(result.moduleDescriptorFilename).to.equal(value.result)
@@ -538,68 +482,54 @@ describe('configuration tests', function(){
 
   //
   //
-  it("archiveLogs test ", function (done) {
+  it("archiveLogs test ", async function () {
     winston.info({message: 'unit_test: BEGIN archiveLogs test '});
-    config.archiveLogs()
-    setTimeout(function(){
-      winston.info({message: 'unit_test: END archiveLogs test'});
-      done();
-		}, 50);
+    await config.archiveLogs()
+    winston.info({message: 'unit_test: END archiveLogs test'});
   })
 
   //
   //
-  it("limitNumberOfArchivedLogs test ", function (done) {
+  it("limitNumberOfArchivedLogs test ", function () {
     winston.info({message: 'unit_test: BEGIN limitNumberOfArchivedLogs test '});
     config.limitNumberOfArchivedLogs()
-    setTimeout(function(){
-      winston.info({message: 'unit_test: END limitNumberOfArchivedLogs test'});
-      done();
-		}, 50);
+    winston.info({message: 'unit_test: END limitNumberOfArchivedLogs test'});
   })
 
   //
   //
-  it("getArchivedLogsList test", function (done) {
+  it("getArchivedLogsList test", function () {
     winston.info({message: 'unit_test: BEGIN getArchivedLogsList test '})
     var list = config.getArchivedLogsList()
-    setTimeout(function(){
-      winston.info({message: 'result: ' + JSON.stringify(list)})
-      winston.info({message: 'count: ' + list.length})
-      expect(list.length).to.be.above(0)
-      winston.info({message: 'unit_test: END getArchivedLogsList test'})
-      done();
-		}, 50);
+    winston.info({message: 'result: ' + JSON.stringify(list)})
+    winston.info({message: 'count: ' + list.length})
+    expect(list.length).to.be.above(0)
+    winston.info({message: 'unit_test: END getArchivedLogsList test'})
   })
+
+
 
   //
   //
-  it("readBinaryFile test", function (done) {
+  it("readBinaryFile test", function () {
     winston.info({message: 'unit_test: BEGIN readBinaryFile test '})
     let directory = path.join(config.appStorageDirectory, "archives", "logs")
     winston.info({message: 'directory: ' + directory})
     var list = config.getArchivedLogsList()
     winston.info({message: 'log: ' + list[0]})
     var data = config.readBinaryFile(directory,list[0])
-    setTimeout(function(){
-      winston.info({message: 'unit_test: RESULT: data length: ' + data.length})
-      expect(data.length).to.be.above(0)
-      winston.info({message: 'unit_test: END readBinaryFile test'})
-      done();
-		}, 50);
+    winston.info({message: 'unit_test: RESULT: data length: ' + data.length})
+    expect(data.length).to.be.above(0)
+    winston.info({message: 'unit_test: END readBinaryFile test'})
   })
-
 
   //
   // test writeLogFile
   //
-  it("writeLogFile test", function (done) {
+  it("writeLogFile test", function () {
     winston.info({message: 'unit_test: BEGIN writeLogFile test '})
     config.writeLogFile("testfile", {"test data 1":1})
-    setTimeout(function(){
-      done();
-      winston.info({message: 'unit_test: END writeLogFile test '})
-		}, 50);
+    winston.info({message: 'unit_test: END writeLogFile test '})
   })
 
 
