@@ -1,7 +1,7 @@
 const winston = require('./config/winston_test.js')
 winston.info({message: 'FILE: messageRouter.spec.js'});
+const path = require('path');
 const expect = require('chai').expect;
-const itParam = require('mocha-param');
 
 // Scope:
 // variables declared outside of the class are 'global' to this module only
@@ -9,8 +9,9 @@ const itParam = require('mocha-param');
 // let has block scope (or global if top level)
 // var has function scope (or global if top level)
 // const has block scope (like let), but can't be changed through reassigment or redeclared
-const testSystemConfigPath = "./unit_tests/test_output/config"
-const config = require('../VLCB-server/configuration.js')(testSystemConfigPath)
+const testSystemDirectory = "./unit_tests/test_output"
+const logsPath = path.join(process.cwd(), "unit_tests", "logs")
+const config = require('../VLCB-server/configuration.js')(testSystemDirectory, logsPath)
 
 const cbusServerPort = 9990
 
@@ -21,17 +22,15 @@ const name = 'unit_test: messageRouter'
   
 describe('messageRouter tests', function(){
 
-  messageRouter.connect('localhost', cbusServerPort)
-
-	before(function(done) {
+	before(async function() {
 		winston.info({message: ' '});
 		winston.info({message: '================================================================================'});
     //                      12345678901234567890123456789012345678900987654321098765432109876543210987654321
 		winston.info({message: '----------------------------- messageRouter tests ------------------------------'});
 		winston.info({message: '================================================================================'});
 		winston.info({message: ' '});
-    //
-		done();
+    await mock_cbusServer.listening
+    await messageRouter.connect('localhost', cbusServerPort)
 	});
 
 	beforeEach(function() {
@@ -40,12 +39,10 @@ describe('messageRouter tests', function(){
         // ensure expected CAN header is reset before each test run
 	});
 
-	after(function(done) {
+	after(async function() {
  		winston.info({message: ' '});   // blank line to separate tests
-    // bit of timing to ensure all winston messages get sent before closing tests completely
-    setTimeout(function(){
-      done();
-    }, 100);
+    await messageRouter.close()
+    await mock_cbusServer.close()
 	});																										
 
 
@@ -54,6 +51,62 @@ describe('messageRouter tests', function(){
   // Actual tests after here...
   //
   //****************************************************************************************** */  
+
+
+  it("connect waits for the TCP connection", async function () {
+    const testCbusServer = new (require('./mock_cbusServer'))(0)
+    const testMessageRouter = require('../VLCB-server/messageRouter.js')(config)
+    const address = await testCbusServer.listening
+
+    try {
+      await testMessageRouter.connect('localhost', address.port)
+      expect(testMessageRouter.connected).to.equal(true)
+    } finally {
+      await testMessageRouter.close()
+      await testCbusServer.close()
+    }
+  })
+
+  it("reports a network failure when an established connection closes", async function () {
+    const testConfig = require('./mock_configuration.js')()
+    const testCbusServer = new (require('./mock_cbusServer'))(0)
+    const testMessageRouter = require('../VLCB-server/messageRouter.js')(testConfig)
+    const address = await testCbusServer.listening
+    const failure = waitForEvent(testConfig.eventBus, 'NETWORK_CONNECTION_FAILURE')
+
+    try {
+      await testMessageRouter.connect('localhost', address.port)
+      await testCbusServer.close()
+
+      expect((await failure).message).to.equal('Network error - retrying connection')
+      expect(testMessageRouter.connected).to.equal(false)
+      expect(testMessageRouter.enableReconnect).to.equal(true)
+    } finally {
+      await testMessageRouter.close()
+      await testCbusServer.close()
+    }
+  })
+
+  it("does not duplicate a network failure notification when an error is followed by close", async function () {
+    const testConfig = require('./mock_configuration.js')()
+    const testCbusServer = new (require('./mock_cbusServer'))(0)
+    const testMessageRouter = require('../VLCB-server/messageRouter.js')(testConfig)
+    const address = await testCbusServer.listening
+    const failures = []
+    testConfig.eventBus.on('NETWORK_CONNECTION_FAILURE', (failure) => failures.push(failure))
+
+    try {
+      await testMessageRouter.connect('localhost', address.port)
+      testMessageRouter.cbusClient.emit('error', new Error('test connection error'))
+      testMessageRouter.cbusClient.emit('close')
+
+      expect(failures).to.have.lengthOf(1)
+      expect(failures[0].message).to.equal('Network error - retrying connection')
+    } finally {
+      await testMessageRouter.close()
+      await testCbusServer.close()
+    }
+  })
 
 
   it("sendCbusMessage test", function (done) {
@@ -65,7 +118,7 @@ describe('messageRouter tests', function(){
     })
 
     let testMessage = ":SB780N0D;"  // QNN
-    var result = messageRouter.sendCbusMessage(testMessage)
+    messageRouter.sendCbusMessage(testMessage)
 
     setTimeout(function(){
       winston.info({message: name +': sendCbusMessage test: result ' + mock_cbusServer.messagesIn[0].toString()});
@@ -117,3 +170,7 @@ describe('messageRouter tests', function(){
 
 
 })
+
+function waitForEvent(eventBus, event) {
+  return new Promise((resolve) => eventBus.once(event, resolve))
+}

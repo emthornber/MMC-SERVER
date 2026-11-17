@@ -20,11 +20,12 @@ class messageRouter{
     this.cbusClient = new net.Socket()
     this.config = configuration
     this.eventBus = configuration.eventBus
-    setInterval(this.connectIntervalFunction.bind(this), 5000);
+    this.connectInterval = setInterval(this.connectIntervalFunction.bind(this), 5000);
     this.enableReconnect = false
     this.connected = false
     this.cbusClientHost = null
     this.cbusClientPort = null
+    this.connectPromise = null
 
     //
     // Setup the handlers for cbusClient events
@@ -47,44 +48,56 @@ class messageRouter{
       }
     }.bind(this));
 
-    this.cbusClient.on('connection', function (data) {
+    this.cbusClient.on('connection', function () {
       winston.debug({message:name + `: cbusClient: on connection:`})
     })
 
-    this.cbusClient.on('connectionAttempt', function (data) {
+    this.cbusClient.on('connectionAttempt', function () {
       winston.debug({message:name + `: cbusClient: on connectionAttempt:`})
     })
 
-    this.cbusClient.on('connectionAttemptFailed', function (data) {
+    this.cbusClient.on('connectionAttemptFailed', function () {
       winston.debug({message:name + `: cbusClient: on connectionAttemptFailed:`})
     })
 
-    this.cbusClient.on('connectionTimeout', function (data) {
+    this.cbusClient.on('connectionTimeout', function () {
       winston.debug({message:name + `: cbusClient: on connectionTimeout:`})
     })
 
     this.cbusClient.on('error', async function (err) {
       winston.error({message: name + `: cbusClient error: ` + err.stack});
-      let caption = `IP: ${this.cbusClientHost}  Port: ${this.cbusClientPort}` 
-      winston.error({message: name + `: cbusClient error: ` + caption});
-      let eventData = {
-        message: "Network error - retrying connection",
-        caption: caption,
-        type: "warning",
-        timeout: 3000
-      }
-      this.eventBus.emit ('NETWORK_CONNECTION_FAILURE', eventData)
-      this.enableReconnect = true
-      this.connected = false
+      this.handleNetworkFailure()
     }.bind(this))
 
-    this.config.eventBus.on('GRID_CONNECT_SEND', function (data) {
+    this.cbusClient.on('close', function () {
+      this.handleNetworkFailure(true)
+    }.bind(this))
+
+    this.gridConnectSendHandler = function (data) {
       let cbusLibMsg = cbusLib.decode(data)
       winston.info({message: name + ': GRID_CONNECT_SEND ' + cbusLibMsg.text});
       winston.debug({message: name + `:  GRID_CONNECT_SEND ${data}`})
       this.sendCbusMessage(data)
-    }.bind(this))
+    }.bind(this)
+    this.config.eventBus.on('GRID_CONNECT_SEND', this.gridConnectSendHandler)
 
+  }
+
+  handleNetworkFailure(onlyIfConnected = false){
+    if (onlyIfConnected && !this.connected) {
+      return
+    }
+    let caption = `IP: ${this.cbusClientHost}  Port: ${this.cbusClientPort}`
+    winston.error({message: name + `: cbusClient error: ` + caption});
+    let eventData = {
+      message: "Network error - retrying connection",
+      caption: caption,
+      type: "warning",
+      timeout: 3000
+    }
+    this.eventBus.emit ('NETWORK_CONNECTION_FAILURE', eventData)
+    this.enableReconnect = true
+    this.connected = false
   }
 
   //
@@ -94,9 +107,25 @@ class messageRouter{
     this.cbusClientHost = remoteAddress
     this.cbusClientPort = cbusPort
     winston.info({message:name + ': try Connect ' + remoteAddress + ' on ' + cbusPort})
+
+    if (this.connected) {
+      return Promise.resolve()
+    }
+
+    if (this.connectPromise) {
+      return this.connectPromise
+    }
+
     // connect to remote socket for CBUS messages
-    try{
-      this.cbusClient.connect(cbusPort, remoteAddress, function () {
+    this.connectPromise = new Promise((resolve, reject) => {
+      const cleanup = () => {
+        this.cbusClient.removeListener('connect', onConnect)
+        this.cbusClient.removeListener('error', onError)
+        this.cbusClient.removeListener('close', onClose)
+      }
+
+      const onConnect = () => {
+        cleanup()
         let message = 'Connected to ' + remoteAddress + ' on ' + cbusPort
         winston.info({message:name + ': ' + message})
         this.connected = true
@@ -108,7 +137,30 @@ class messageRouter{
         }
         this.config.eventBus.emit ('SERVER_NOTIFICATION', data)
         this.enableReconnect = true
-      }.bind(this));
+        resolve()
+      }
+
+      const onError = (error) => {
+        cleanup()
+        reject(error)
+      }
+
+      const onClose = () => {
+        cleanup()
+        reject(new Error('Connection closed before it was established'))
+      }
+
+      this.cbusClient.once('connect', onConnect)
+      this.cbusClient.once('error', onError)
+      this.cbusClient.once('close', onClose)
+
+      try {
+        this.cbusClient.connect(cbusPort, remoteAddress)
+      } catch (error) {
+        cleanup()
+        reject(error)
+      }
+
       if (this.cbusClient){
         winston.info({message:name + ': cbusClient connection succeeded: '})
         winston.info({message:name + ': cbusClient socket: ' +JSON.stringify(this.cbusClient)})
@@ -116,15 +168,16 @@ class messageRouter{
       } else {
         winston.info({message:name + ': cbusClient connection failed: '})
       }
-    } catch(e){
-      winston.info({message:name + ': cbusClient connection failed: ' + e})
-    }    
+    }).finally(() => {
+      this.connectPromise = null
+    })
+
+    return this.connectPromise
   }
 
   connectIntervalFunction(){
     winston.debug({message:name + ': cbusClient check connection:'})
     if (this.cbusClient.readyState == 'opening'){
-      this.connected = true
       let data = {
         message: "Network port opening",
         type: "info",
@@ -138,7 +191,9 @@ class messageRouter{
         winston.debug({message:name + ': cbusClient still connected:'})
       } else {
         winston.info({message:name + ': cbusClient not connected:'})
-        this.connect(this.cbusClientHost, this.cbusClientPort)
+        this.connect(this.cbusClientHost, this.cbusClientPort).catch(function (error) {
+          winston.debug({message:name + ': cbusClient reconnect failed: ' + error.message})
+        })
       }
     }
   }
@@ -153,7 +208,22 @@ class messageRouter{
     this.cbusClient.write(cbusMSG)
   }
 
+  async close(){
+    this.enableReconnect = false
+    this.connected = false
+    clearInterval(this.connectInterval)
+    this.config.eventBus.removeListener('GRID_CONNECT_SEND', this.gridConnectSendHandler)
+
+    if (this.cbusClient.destroyed) {
+      return
+    }
+
+    await new Promise((resolve) => {
+      this.cbusClient.once('close', resolve)
+      this.cbusClient.destroy()
+    })
+  }
+
 }
 
 module.exports = (configuration) => { return new messageRouter(configuration) }
-
