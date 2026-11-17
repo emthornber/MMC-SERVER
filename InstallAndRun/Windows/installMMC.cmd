@@ -19,7 +19,7 @@ set INSTALL_DIR=C:\MMC
 set GIT=C:\Program Files\Git\cmd
 
 setlocal enabledelayedexpansion
-echo Welcome to the MMC installer for Windows. Version 20 April 2026
+echo Welcome to the MMC installer for Windows. 17th August 2026
 echo Checking for Administrator permission...
 whoami /groups | findstr /i "S-1-16-12288" >nul 2>&1
 if %errorLevel% == 0 (
@@ -34,7 +34,6 @@ if "%~1"=="__PHASE_TWO__" (
     goto :installmmc
 )
 
-echo Welcome to the MMC installer for Windows. Version 27 July 2025 16:58
 echo Installation directory set to %INSTALL_DIR%
 REM  ensure installation directory can be created
 md "%INSTALL_DIR%" 2>NUL
@@ -94,7 +93,7 @@ if %ERRORLEVEL% EQU 0 (
 
 REM Fetch the latest LTS version from the nodejs.org website.
 FOR /F "delims=" %%F IN ('curl -fsSL https://nodejs.org/download/release/index.json ^
-                           ^| "%JQ%" -r "[.[]|select (.lts != false)][0] | .version"') DO (
+                           ^| "%JQ%" -r "[.[]|select (.lts)][0] | .version"') DO (
    set NODEJS_VERSION=%%F
 )
 echo Latest NodeJS version was found to be %NODEJS_VERSION%
@@ -126,13 +125,14 @@ if %ERRORLEVEL% NEQ 0 (
 	)
 	echo Installing NodeJS...
 	msiexec /i %NODEJS_DL_FILE%
-	set relaunch_required="true"
+	set relaunch_required=true
 ) else (
 	FOR /F "delims=" %%i IN ('node --version') DO (
 		set this_version=%%i
 	)
 	echo NodeJS version !this_version! already installed.
-	if "!this_version!"=="%NODEJS_VERSION%" (
+	powershell -Command "if ([System.Version]'%NODEJS_VERSION:v=%' -le [System.Version]'!this_version:v=!') { exit 0 } else { exit 1 }"
+	if !ERRORLEVEL! equ 0 (
 		echo NodeJS is up to date.
 	) else (
 		echo NodeJS should be updated.
@@ -146,7 +146,7 @@ if %ERRORLEVEL% NEQ 0 (
 			)
 			echo Installing NodeJS...
 			msiexec /i %NODEJS_DL_FILE%
-			set relaunch_required="true"
+			set relaunch_required=true
 		)
 	)
 )
@@ -176,7 +176,7 @@ if %ERRORLEVEL% NEQ 0 (
 	) else (echo Git installer already downloaded.)
 	echo Installing Git...
 	.\%GIT_DL_FILE%
-	set relaunch_required="true"
+	set relaunch_required=true
 ) else (echo Git is already installed.)
 
 REM 
@@ -191,7 +191,7 @@ REM  Setop server if it is running
 taskkill /IM node.exe 2>NUL
 REM 
 
-if %relaunch_required%=="true" (
+if "%relaunch_required%"=="true" (
     echo Injecting new PATH into current session...
     for /f "usebackq delims=" %%i in (`powershell -NoProfile -Command "[Environment]::GetEnvironmentVariable('PATH','Machine')"`) do set "MPATH=%%i"
     for /f "usebackq delims=" %%i in (`powershell -NoProfile -Command "[Environment]::GetEnvironmentVariable('PATH','User')"`) do set "UPATH=%%i"

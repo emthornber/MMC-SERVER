@@ -1,10 +1,8 @@
 const winston = require('winston');		// use config from root instance
-const net = require('net')
 let cbusLib = require('cbuslibrary')
 const EventEmitter = require('events').EventEmitter;
 const utils = require('./../VLCB-server/utilities.js');
 const longMessage = require('./../VLCB-server/longMessage.js')
-const { isUndefined } = require('util');
 const cbusLibrary = require('cbuslibrary');
 
 const name = 'mergAdminNode'
@@ -40,7 +38,8 @@ class cbusAdmin extends EventEmitter {
     // keep a record of when any module descriptors are updated, so we know when to recheck
     this.moduleDescriptorFilesTimeStamp = Date.now()   // put valid milliseconds in to start
     this.nodeDescripter_Queue = []      // create a queue for reading MDF's for nodes
-    setInterval(this.checkNodeDescriptorIntervalFunc.bind(this), 20);
+    this.intervalHandles = []
+    this.intervalHandles.push(setInterval(this.checkNodeDescriptorIntervalFunc.bind(this), 20));
 
     const outHeader = ((((this.pr1 * 4) + this.pr2) * 128) + this.canId) << 5
     this.header = ':S' + outHeader.toString(16).toUpperCase() + 'N'
@@ -48,34 +47,25 @@ class cbusAdmin extends EventEmitter {
     this.lastCbusTrafficTime = Date.now()   // put valid milliseconds in to start
     this.LastCbusMessage = null
     this.CBUS_Queue = []
-    setInterval(this.sendCBUSIntervalFunc.bind(this), 10);
+    this.intervalHandles.push(setInterval(this.sendCBUSIntervalFunc.bind(this), 10));
     this.awaitingNodeReset_Queue = []
-    setInterval(this.awaitingNodeResetIntervalFunc.bind(this), 500);
+    this.intervalHandles.push(setInterval(this.awaitingNodeResetIntervalFunc.bind(this), 500));
     this.eventsChanged = false
     // update client if anything changed
-    setInterval(this.updateClients.bind(this), 200);
+    this.intervalHandles.push(setInterval(this.updateClients.bind(this), 200));
     this.opcodeTracker = {}
     this.connectionDetails = null
+    this.gridConnectReceiveQueue = Promise.resolve()
 
-    this.config.eventBus.on('GRID_CONNECT_RECEIVE', async function (data) {
-      //winston.debug({message: name + `: GRID_CONNECT_RECEIVE ${data}`})
-      try{
-        this.lastCbusTrafficTime = Date.now()     // store this time stamp
-        let cbusMsg = cbusLibrary.decode(data)
-        winston.debug({message: name + `: GRID_CONNECT_RECEIVE ${JSON.stringify(cbusMsg)}`})
-        //
-        this.emit('nodeTraffic', {direction: 'In', json: cbusMsg});
-        if (this.isMessageValid(cbusMsg)){
-          this.action_message(cbusMsg)
-        }
-      } catch (err) {
-        winston.error({message: name + `: GRID_CONNECT_RECEIVE: ${err}`})
-      }
-    }.bind(this))
+    this.gridConnectReceiveHandler = function (data) {
+      this.gridConnectReceiveQueue = this.gridConnectReceiveQueue.then(() => this.processGridConnectMessage(data))
+      return this.gridConnectReceiveQueue
+    }.bind(this)
+    this.config.eventBus.on('GRID_CONNECT_RECEIVE', this.gridConnectReceiveHandler)
 
     //
     this.actions = { //actions when Opcodes are received
-      '00': async (cbusMsg) => { // ACK
+      '00': async () => { // ACK
           winston.info({message: "mergAdminNode: ACK (00) : No Action"});
       },
       //
@@ -369,7 +359,7 @@ class cbusAdmin extends EventEmitter {
         } catch (err) { winston.error({message: name + `: LM (E9) ${err}` }) }
       },
       //
-      'EF': async (cbusMsg) => {//PARAMS - response to RQNP in setup mode
+      'EF': async () => {//PARAMS - response to RQNP in setup mode
         try{
           //winston.debug({message: `mergAdminNode: PARAMS (EF) Received`});
         } catch (err) { winston.error({message: name + `: PARAMS (EF) ${err}` }) }
@@ -503,6 +493,24 @@ class cbusAdmin extends EventEmitter {
         // GRSP was for an event command
         winston.info({message: `mergAdminNode: GRSP for event command : node ` + nodeNumber});
       }
+    }
+  }
+
+  //
+  //
+  async processGridConnectMessage(data) {
+    //winston.debug({message: name + `: GRID_CONNECT_RECEIVE ${data}`})
+    try{
+      this.lastCbusTrafficTime = Date.now()     // store this time stamp
+      let cbusMsg = cbusLibrary.decode(data)
+      winston.debug({message: name + `: GRID_CONNECT_RECEIVE ${JSON.stringify(cbusMsg)}`})
+      //
+      this.emit('nodeTraffic', {direction: 'In', json: cbusMsg});
+      if (this.isMessageValid(cbusMsg)){
+        await this.action_message(cbusMsg)
+      }
+    } catch (err) {
+      winston.error({message: name + `: GRID_CONNECT_RECEIVE: ${err}`})
     }
   }
 
@@ -1613,7 +1621,9 @@ class cbusAdmin extends EventEmitter {
         let eventNI = this.nodeConfig.nodes[nodeNumber].storedEventsNI[eventIdentifier]
         winston.info({message: name + `: requestAllEventVariablesByIdentifier:  event ${JSON.stringify(eventNI)}`});
         try{
-          numberOfVariables = eventNI.variables[0]
+          if (eventNI.variables[0] != undefined) {
+            numberOfVariables = eventNI.variables[0]
+          }
         } catch (err){
           winston.error({message: name + `: requestAllEventVariablesByIdentifier: EV0 ${err}`});
         }
@@ -1954,6 +1964,14 @@ class cbusAdmin extends EventEmitter {
     } catch (err){
       winston.error({message: name + `: getNodeDescriptor: node ${nodeNumber} ${err}` });              
     }
+  }
+
+  dispose(){
+    for (const intervalHandle of this.intervalHandles) {
+      clearInterval(intervalHandle)
+    }
+    this.intervalHandles = []
+    this.config.eventBus.removeListener('GRID_CONNECT_RECEIVE', this.gridConnectReceiveHandler)
   }
 
 };

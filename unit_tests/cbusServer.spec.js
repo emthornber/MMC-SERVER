@@ -1,5 +1,6 @@
 const winston = require('./config/winston_test.js')
 winston.info({message: 'FILE: cbusServer.spec.js'});
+const path = require('path');
 const expect = require('chai').expect;
 const itParam = require('mocha-param');
 
@@ -9,8 +10,9 @@ const itParam = require('mocha-param');
 // let has block scope (or global if top level)
 // var has function scope (or global if top level)
 // const has block scope (like let), but can't be changed through reassigment or redeclared
-const testSystemConfigPath = "./unit_tests/test_output/config"
-const config = require('../VLCB-server/configuration.js')(testSystemConfigPath)
+const testSystemDirectory = "./unit_tests/test_output"
+const logsPath = path.join(process.cwd(), "unit_tests", "logs")
+const config = require('../VLCB-server/configuration.js')(testSystemDirectory, logsPath)
 
 let cbusServer = require('../VLCB-server/cbusServer')(config)
 
@@ -68,18 +70,15 @@ describe('cbusServer tests', function(){
   // it doesn't mean the serial port has connected
   // see serialGC.spec.js for serial port tests
   //
-  itParam("connect test ${JSON.stringify(value)}", GetTestCase_connect(), async function (done, value) {
+  itParam("connect test ${JSON.stringify(value)}", GetTestCase_connect(), async function (value) {
 
     winston.info({message: name + ': BEGIN connect test: ' + JSON.stringify(value)});
     var result = await cbusServer.connect(9999, value.targetSerial)
 
-    setTimeout(function(){
-      winston.info({message: name +': connect test: result ' + result});
-      cbusServer.close()
-      expect(result).to.equal(value.result);
-      winston.info({message: name +': END connect test'});
-			done();
-		}, 20);
+    winston.info({message: name +': connect test: result ' + result});
+    await cbusServer.close()
+    expect(result).to.equal(value.result);
+    winston.info({message: name +': END connect test'});
   })
 
 })

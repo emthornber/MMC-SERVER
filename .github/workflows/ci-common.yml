@@ -1,0 +1,117 @@
+name: CI tests when code pushed to repository
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: ESLint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: npm install  # I wish package-lock.json was in git, cos then it would be "npm ci"
+
+      - name: Run ESLint
+        run: npm run lint
+
+  test:
+    name: Unit and functional tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          # cache: npm
+
+      - name: Install dependencies
+        run: npm install  # I wish package-lock.json was in git, cos then it would be "npm ci"
+
+      - name: Check out CBUS network simulator
+        uses: actions/checkout@v7
+        with:
+          repository: david284/CbusNetworkSimulator
+          ref: 6a3acd7b6990092ec21de4091c5cf288e5f92227
+          path: CbusNetworkSimulator
+
+      - name: Install CBUS network simulator dependencies
+        working-directory: CbusNetworkSimulator
+        run: npm ci
+
+      - name: Run unit tests with coverage
+        run: npm run test:coverage
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-report
+          path: coverage/lcov.info
+          if-no-files-found: warn
+
+      - name: Run functional tests
+        run: npm run test:functional
+        env:
+          MMC_CBUS_SIMULATOR_DIRECTORY: ${{ github.workspace }}/CbusNetworkSimulator
+
+      - name: Upload diagnostic files
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: diagnostic-files
+          path: |
+            unit_tests/logs/
+            unit_tests/test_output/appSettings.json
+            unit_tests/test_output/config/modules/
+            unit_tests/test_output/config/nodeConfig.json
+            unit_tests/test_output/test_user/
+            functional_tests/test_output/
+          if-no-files-found: warn
+
+  browser-test:
+    name: Browser end-to-end tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: npm install  # I wish package-lock.json was in git, cos then it would be "npm ci"
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run browser end-to-end tests
+        run: npm run test:browser
+
+      - name: Upload browser diagnostic files
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: browser-diagnostic-files
+          path: |
+            browser_tests/test-results/
+            browser_tests/test_output/
+          if-no-files-found: warn
