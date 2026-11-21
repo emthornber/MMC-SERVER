@@ -1,0 +1,19 @@
+# MMC
+
+## Installation Security Alert
+
+1. Trigger the warning.
+    Double-click the .pkg file to attempt opening it, then click Done or Cancel
+    when the security alert appears.
+    
+2. Open Privacy & Security.
+    Click the Apple menu () in the top-left corner, choose System Settings (or
+    System Preferences on older macOS versions), and select Privacy & Security.
+
+3. Click Open Anyway.
+    Scroll down to the Security section where your blocked .pkg file is listed,
+    then click Open Anyway next to it.
+
+4. Confirm and install.
+    Click Open (or Open Anyway) on the confirmation pop-up, enter your Mac's
+    administrator password or use Touch ID, and the installer will launch.

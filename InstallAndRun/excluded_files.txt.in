@@ -1,10 +1,13 @@
 |appdir|/bin/*
+|appdir|/browser_tests/*
 |appdir|/dist/*
 |appdir|/Documents/*
+|appdir|/functional_tests/*
 |appdir|/InstallAndRun/*
 |appdir|/logs/*
 |appdir|/node_modules/*
-|appdir|/undefined/*
 |appdir|/unit_tests/*
 |appdir|/package-lock.json
+Makefile
+*.md
 *.tar.gz
